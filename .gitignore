@@ -46,3 +46,12 @@ Desktop.ini
 releases/
 *.exe
 *.spec
+
+# Internal project management
+AUFGABEN.txt
+CodeBox_Konzept.md
+Feature_Analyse_PythonBox.md
+desktop.ini
+
+# Claude Code internal
+.claude/
