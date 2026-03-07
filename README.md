@@ -1,6 +1,6 @@
 # Python Code Architect (PythonBox) v8
 
-Eine leichtgewichtige Python-IDE mit modernem Dark Theme. Schneller Start, niedriger RAM-Verbrauch, integrierter Debugger.
+A lightweight Python IDE with a modern dark theme. Fast startup, low RAM usage, integrated debugger.
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
 ![PyQt5](https://img.shields.io/badge/PyQt5-5.15+-green.svg)
@@ -9,84 +9,88 @@ Eine leichtgewichtige Python-IDE mit modernem Dark Theme. Schneller Start, niedr
 ## Features
 
 ### Debugging
-- **VS Code Integration** - Direkt in VS Code oeffnen/debuggen
-- **PDB Debugger** - Interaktiver Debugger im Output-Panel
-- **Breakpoints** - Visuelle Breakpoint-Verwaltung (Klick auf Zeilennummer)
-- **Debug-Toolbar** - Step In/Out/Over Controls
+- **VS Code Integration** - Open and debug directly in VS Code
+- **PDB Debugger** - Interactive debugger in the output panel
+- **Breakpoints** - Visual breakpoint management (click on line numbers)
+- **Debug Toolbar** - Step In/Out/Over controls
 - **PyCharm Integration** - Optional
 
 ### Editor
-- **Syntax-Highlighting** - Python-spezifisch
-- **Auto-Completion** - Keywords, Builtins, Snippets
-- **Code Folding** - Klassen/Funktionen einklappen
-- **Minimap** - Code-Vorschau rechts
-- **Bracket Matching** - Klammer-Hervorhebung
+- **Syntax Highlighting** - Python-specific
+- **Auto-Completion** - Keywords, builtins, snippets
+- **Code Folding** - Collapse classes/functions
+- **Minimap** - Code preview on the right
+- **Bracket Matching** - Bracket highlighting
 
-### Entwicklung
-- **Linter-Integration** - Pylint/Flake8 Fehleranzeige
-- **Git-Integration** - Status, Diff, Modified-Markierung
-- **Error-Markierungen** - Rote Wellenlinien
-- **Tab-System** - Mehrere Dateien gleichzeitig
+### Development
+- **Linter Integration** - Pylint/Flake8 error display
+- **Git Integration** - Status, diff, modified markers
+- **Error Markers** - Red squiggly lines
+- **Tab System** - Multiple files simultaneously
 
 ## Installation
 
 ```bash
-# Repository klonen
+# Clone the repository
 git clone https://github.com/lukisch/pythonbox.git
 cd pythonbox
 
-# Dependencies installieren
+# Install dependencies
 pip install -r requirements.txt
 
-# Starten
+# Run
 python PythonBox_v8.py
 ```
 
 ### Windows
-Alternativ: `START_PythonBox_v8.bat` ausfuehren.
+Alternatively, run `START_PythonBox_v8.bat`.
 
 ## Keyboard Shortcuts
 
-| Shortcut | Funktion |
+| Shortcut | Function |
 |----------|----------|
-| `Ctrl+F` | Suchen |
-| `Ctrl+H` | Ersetzen |
-| `Ctrl+G` | Gehe zu Zeile |
-| `Ctrl+/` | Kommentieren |
-| `F5` | Ausfuehren |
-| `F9` | Breakpoint Toggle |
+| `Ctrl+F` | Search |
+| `Ctrl+H` | Replace |
+| `Ctrl+G` | Go to line |
+| `Ctrl+/` | Toggle comment |
+| `F5` | Run |
+| `F9` | Toggle breakpoint |
 | `F10` | Step Over |
 | `F11` | Step Into |
 
 ## Screenshots
 
-Das Dark Theme basiert auf dem Fusion-Style mit VS Code-aehnlicher Farbpalette.
+The dark theme is based on the Fusion style with a VS Code-like color palette.
 
-## Systemanforderungen
+## System Requirements
 
 - Python 3.8+
 - PyQt5 5.15+
 - Windows / Linux / macOS
 
-### Optionale Integrationen
-- VS Code (fuer "In VS Code oeffnen")
-- PyCharm (fuer "In PyCharm oeffnen")
-- Pylint / Flake8 (fuer Linter-Support)
-- Git (fuer Git-Integration)
+### Optional Integrations
+- VS Code (for "Open in VS Code")
+- PyCharm (for "Open in PyCharm")
+- Pylint / Flake8 (for linter support)
+- Git (for Git integration)
 
 ## Roadmap
 
-Geplante Erweiterung zur Multi-Language IDE "CodeBox":
-- JavaScript/TypeScript Support
-- C/C++ Support (mit GDB)
-- Rust Support
-- Go Support
-- Plugin-System fuer Sprachen
+Planned expansion to a multi-language IDE "CodeBox":
+- JavaScript/TypeScript support
+- C/C++ support (with GDB)
+- Rust support
+- Go support
+- Plugin system for languages
 
-## Lizenz
+## License
 
-MIT License - siehe [LICENSE](LICENSE)
+MIT License - see [LICENSE](LICENSE)
 
-## Autor
+## Author
 
 Lukas Geiger ([@lukisch](https://github.com/lukisch))
+
+---
+
+Deutsche Version: [README.de.md](README.de.md)
