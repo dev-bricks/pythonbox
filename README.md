@@ -90,3 +90,30 @@ MIT License - siehe [LICENSE](LICENSE)
 ## Autor
 
 Lukas Geiger ([@lukisch](https://github.com/lukisch))
+
+---
+
+## English
+
+A lightweight Python IDE with dark theme, debugging integration, and code folding.
+
+### Features
+
+- Syntax highlighting
+- Dark/light themes
+- Debugging integration
+- Code folding
+- Auto-completion
+
+### Installation
+
+```bash
+git clone https://github.com/lukisch/REL_Editor_PythonBox.git
+cd REL_Editor_PythonBox
+pip install -r requirements.txt
+python "PythonBox_v8.py"
+```
+
+### License
+
+See [LICENSE](LICENSE) for details.
