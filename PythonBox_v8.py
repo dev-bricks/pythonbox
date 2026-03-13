@@ -981,19 +981,24 @@ class LinterRunner:
         tmp_path = Path.home() / ".python_baukasten" / "temp_lint.py"
         tmp_path.parent.mkdir(parents=True, exist_ok=True)
         tmp_path.write_text(code, encoding='utf-8')
-        
+
         results = []
-        
-        # Versuche Flake8 (schneller)
-        if self.has_flake8:
-            results.extend(self._run_flake8(str(tmp_path)))
-        # Fallback auf Pylint
-        elif self.has_pylint:
-            results.extend(self._run_pylint(str(tmp_path)))
-        # Kein Linter verfügbar - nutze AST für Syntax-Fehler
-        else:
-            results.extend(self._run_ast_check(code))
-        
+        try:
+            # Versuche Flake8 (schneller)
+            if self.has_flake8:
+                results.extend(self._run_flake8(str(tmp_path)))
+            # Fallback auf Pylint
+            elif self.has_pylint:
+                results.extend(self._run_pylint(str(tmp_path)))
+            # Kein Linter verfügbar - nutze AST für Syntax-Fehler
+            else:
+                results.extend(self._run_ast_check(code))
+        finally:
+            try:
+                tmp_path.unlink()
+            except OSError:
+                pass
+
         return results
 
     def _run_flake8(self, file_path: str) -> List[Dict]:
@@ -1004,7 +1009,7 @@ class LinterRunner:
                 ["flake8", "--format=%(row)d:%(col)d:%(code)s:%(text)s", file_path],
                 capture_output=True, text=True, timeout=10
             )
-            
+
             for line in proc.stdout.strip().split('\n'):
                 if ':' in line:
                     parts = line.split(':', 3)
@@ -1016,9 +1021,9 @@ class LinterRunner:
                             'message': parts[3],
                             'severity': 'error' if parts[2].startswith('E') else 'warning'
                         })
-        except Exception:
+        except Exception as e:
             pass
-        
+
         return results
 
     def _run_pylint(self, file_path: str) -> List[Dict]:
@@ -1026,11 +1031,11 @@ class LinterRunner:
         results = []
         try:
             proc = subprocess.run(
-                ["pylint", "--output-format=text", "--msg-template={line}:{column}:{msg_id}:{msg}", 
+                ["pylint", "--output-format=text", "--msg-template={line}:{column}:{msg_id}:{msg}",
                  file_path],
                 capture_output=True, text=True, timeout=30
             )
-            
+
             for line in proc.stdout.strip().split('\n'):
                 if ':' in line and not line.startswith('*'):
                     parts = line.split(':', 3)
@@ -1042,9 +1047,9 @@ class LinterRunner:
                             'message': parts[3],
                             'severity': 'error' if parts[2].startswith('E') else 'warning'
                         })
-        except Exception:
+        except Exception as e:
             pass
-        
+
         return results
 
     def _run_ast_check(self, code: str) -> List[Dict]:
@@ -1491,7 +1496,7 @@ class DebugOutputPanel(QWidget):
         self.output.appendPlainText("Befehle: n(ext), s(tep), c(ontinue), r(eturn), p <var>, l(ist), q(uit)")
         self.output.appendPlainText("─" * 50 + "\n")
         
-        self.process.start("python", ["-m", "pdb", file_path])
+        self.process.start(sys.executable, ["-m", "pdb", file_path])
         
         # Breakpoints setzen nach Start
         if breakpoints:
@@ -1523,7 +1528,7 @@ class DebugOutputPanel(QWidget):
         self.output.appendPlainText(f"▶️ Ausführen: {file_path}\n")
         self.output.appendPlainText("─" * 50 + "\n")
         
-        self.process.start("python", ["-u", file_path])
+        self.process.start(sys.executable, ["-u", file_path])
         self.btn_stop.setEnabled(True)
 
     def send_command(self, cmd: str):
@@ -1672,7 +1677,7 @@ class SettingsDialog(QDialog):
     
     def __init__(self, parent=None, settings: QSettings = None):
         super().__init__(parent)
-        self.settings = settings or QSettings("PythonArchitect", "v6")
+        self.settings = settings or QSettings("PythonArchitect", "v8")
         self.setWindowTitle("Einstellungen")
         self.setMinimumSize(400, 350)
         
