@@ -297,6 +297,14 @@ class CodeEditor(QPlainTextEdit):
         bracket_pairs = {'(': ')', '[': ']', '{': '}', '"': '"', "'": "'"}
         if event.text() in bracket_pairs:
             cursor = self.textCursor()
+            # Prüfe ob Cursor innerhalb eines String-Literals ist
+            full_text = self.toPlainText()
+            cursor_pos = cursor.position()
+            mask = self._build_string_comment_mask(full_text)
+            if cursor_pos < len(mask) and mask[cursor_pos]:
+                # Innerhalb von String/Kommentar: kein Auto-Close
+                super().keyPressEvent(event)
+                return
             super().keyPressEvent(event)
             cursor = self.textCursor()
             cursor.insertText(bracket_pairs[event.text()])
@@ -383,8 +391,55 @@ class CodeEditor(QPlainTextEdit):
         
         self.highlightCurrentLine()
 
+    @staticmethod
+    def _build_string_comment_mask(text: str) -> list:
+        """Gibt eine Bool-Maske zurück: True an jeder Position die in einem String oder Kommentar liegt."""
+        mask = [False] * len(text)
+        i = 0
+        n = len(text)
+        while i < n:
+            # Triple-quotes (muessen vor single-quotes geprueft werden)
+            for delim in ('"""', "'''"):
+                if text[i:i + 3] == delim:
+                    end = text.find(delim, i + 3)
+                    if end == -1:
+                        end = n - 3
+                    end += 3
+                    for j in range(i, min(end, n)):
+                        mask[j] = True
+                    i = end
+                    break
+            else:
+                # Single-line comment
+                if text[i] == '#':
+                    j = i
+                    while j < n and text[j] != '\n':
+                        mask[j] = True
+                        j += 1
+                    i = j
+                # Single/double quoted string
+                elif text[i] in ('"', "'"):
+                    q = text[i]
+                    mask[i] = True
+                    i += 1
+                    while i < n and text[i] != q:
+                        if text[i] == '\\':
+                            mask[i] = True
+                            i += 1  # escape char
+                        if i < n:
+                            mask[i] = True
+                        i += 1
+                    if i < n:
+                        mask[i] = True  # closing quote
+                    i += 1
+                else:
+                    i += 1
+        return mask
+
     def find_matching_bracket(self, text: str, pos: int, bracket: str) -> int:
-        """Findet die passende Klammer"""
+        """Findet die passende Klammer; ignoriert Strings und Kommentare."""
+        mask = self._build_string_comment_mask(text)
+
         if bracket in self.OPEN_BRACKETS:
             # Suche vorwärts
             target = self.BRACKETS[bracket]
@@ -397,20 +452,21 @@ class CodeEditor(QPlainTextEdit):
             direction = -1
             start = pos - 1
             end = -1
-        
+
         count = 1
         i = start
-        
+
         while i != end:
-            char = text[i]
-            if char == bracket:
-                count += 1
-            elif char == target:
-                count -= 1
-                if count == 0:
-                    return i
+            if not mask[i]:
+                char = text[i]
+                if char == bracket:
+                    count += 1
+                elif char == target:
+                    count -= 1
+                    if count == 0:
+                        return i
             i += direction
-        
+
         return None
 
     def emitCursorPosition(self):
@@ -731,11 +787,11 @@ class Minimap(QPlainTextEdit):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setTextInteractionFlags(Qt.NoTextInteraction)
         self.setCursor(Qt.PointingHandCursor)
-        
+
         # Sehr kleine Schrift für Minimap
         font = QFont("Consolas", 1)
         self.setFont(font)
-        
+
         # Styling
         self.setStyleSheet("""
             QPlainTextEdit {
@@ -744,21 +800,31 @@ class Minimap(QPlainTextEdit):
                 border-left: 1px solid #333;
             }
         """)
-        
+
         self.setFixedWidth(80)
         self.setLineWrapMode(QPlainTextEdit.NoWrap)
-        
+
         # Viewport-Rechteck
         self.viewport_rect = QRect()
-        
+
+        # Debounce-Timer für textChanged (verhindert Update bei jedem Tastendruck)
+        self._update_timer = QTimer()
+        self._update_timer.setSingleShot(True)
+        self._update_timer.setInterval(300)
+        self._update_timer.timeout.connect(self._do_update_content)
+
         # Verbindungen
-        self.editor.textChanged.connect(self.update_content)
+        self.editor.textChanged.connect(self._update_timer.start)
         self.editor.verticalScrollBar().valueChanged.connect(self.update_viewport)
-        
+
         self.update_content()
 
     def update_content(self):
-        """Aktualisiert den Minimap-Inhalt"""
+        """Aktualisiert den Minimap-Inhalt sofort (z.B. beim ersten Laden)."""
+        self._do_update_content()
+
+    def _do_update_content(self):
+        """Führt die eigentliche Minimap-Aktualisierung durch."""
         self.setPlainText(self.editor.toPlainText())
         self.update_viewport()
 
@@ -831,13 +897,19 @@ class FoldingArea(QWidget):
         self.editor = editor
         self.folded_blocks = set()  # Set von gefalteten Block-Nummern
         self.foldable_blocks = {}   # {block_number: end_block_number}
-        
+
         self.setFixedWidth(14)
         self.setCursor(Qt.PointingHandCursor)
-        
+
+        # Debounce-Timer für textChanged (verhindert Update bei jedem Tastendruck)
+        self._fold_timer = QTimer()
+        self._fold_timer.setSingleShot(True)
+        self._fold_timer.setInterval(300)
+        self._fold_timer.timeout.connect(self.update_foldable_blocks)
+
         # Verbindungen
         self.editor.blockCountChanged.connect(self.update_foldable_blocks)
-        self.editor.textChanged.connect(self.update_foldable_blocks)
+        self.editor.textChanged.connect(self._fold_timer.start)
 
     def update_foldable_blocks(self):
         """Ermittelt faltbare Blöcke (def, class, if, for, etc.)"""
@@ -3435,9 +3507,9 @@ class PythonArchitect(QMainWindow):
         tmp_path.write_text(code, encoding='utf-8')
         
         if sys.platform == "win32":
-            subprocess.Popen(f'start cmd /k python "{tmp_path}"', shell=True)
+            subprocess.Popen(['cmd', '/c', 'start', '', 'cmd', '/k', 'python', str(tmp_path)])
         else:
-            subprocess.Popen(['x-terminal-emulator', '-e', f'python3 "{tmp_path}"'])
+            subprocess.Popen(['x-terminal-emulator', '-e', 'python3', str(tmp_path)])
 
     def build_exe(self):
         if not shutil.which("pyinstaller"):
@@ -3492,7 +3564,7 @@ class PythonArchitect(QMainWindow):
 
     def run_external_tool(self, path):
         if sys.platform == "win32":
-            subprocess.Popen(f'start cmd /k python "{path}"', shell=True)
+            subprocess.Popen(['cmd', '/c', 'start', '', 'cmd', '/k', 'python', str(path)])
         else:
             subprocess.Popen(['python3', str(path)])
 
