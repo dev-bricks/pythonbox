@@ -3,7 +3,7 @@
 Eine leichtgewichtige Python-IDE mit modernem Dark Theme. Schneller Start, niedriger RAM-Verbrauch, integrierter Debugger.
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
-![PyQt5](https://img.shields.io/badge/PyQt5-5.15+-green.svg)
+![PySide6](https://img.shields.io/badge/PySide6-6.5+-green.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ## Features
@@ -65,7 +65,7 @@ Das Dark Theme basiert auf dem Fusion-Style mit VS Code-aehnlicher Farbpalette.
 ## Systemanforderungen
 
 - Python 3.8+
-- PyQt5 5.15+
+- PySide6 6.5+
 - Windows / Linux / macOS
 
 ### Optionale Integrationen

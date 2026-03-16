@@ -1,2 +1,2 @@
 # Python Code Architect (PythonBox) Dependencies
-PyQt5>=5.15.0
+PySide6>=6.5.0

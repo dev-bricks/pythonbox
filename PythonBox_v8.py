@@ -46,7 +46,7 @@ from datetime import datetime
 from typing import Optional, Dict, List, Tuple
 
 # GUI Imports
-from PyQt5.QtWidgets import (
+from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QSplitter, QTreeWidget, QTreeWidgetItem,
     QMessageBox, QInputDialog, QPlainTextEdit, QFrame, QComboBox,
@@ -57,11 +57,11 @@ from PyQt5.QtWidgets import (
     QScrollBar, QSlider, QSizePolicy, QListWidget, QListWidgetItem,
     QToolTip
 )
-from PyQt5.QtCore import (
-    Qt, QSize, QRect, QRegExp, QUrl, QMimeData, QProcess, 
-    QTimer, pyqtSignal, QSettings, QStringListModel, QPoint
+from PySide6.QtCore import (
+    Qt, QSize, QRect, QRegularExpression, QUrl, QMimeData, QProcess,
+    QTimer, Signal, QSettings, QStringListModel, QPoint
 )
-from PyQt5.QtGui import (
+from PySide6.QtGui import (
     QFont, QColor, QPainter, QTextFormat, QSyntaxHighlighter, 
     QTextCharFormat, QPalette, QIcon, QKeySequence, QTextCursor,
     QTextDocument, QFontMetrics, QPen, QBrush
@@ -76,18 +76,18 @@ def set_dark_theme(app):
     dark_palette = QPalette()
     dark_color = QColor(40, 40, 40)
     
-    dark_palette.setColor(QPalette.Window, dark_color)
-    dark_palette.setColor(QPalette.WindowText, Qt.white)
-    dark_palette.setColor(QPalette.Base, QColor(30, 30, 30))
+    dark_palette.setColor(QPalette.ColorRole.Window, dark_color)
+    dark_palette.setColor(QPalette.ColorRole.WindowText, Qt.white)
+    dark_palette.setColor(QPalette.ColorRole.Base, QColor(30, 30, 30))
     dark_palette.setColor(QPalette.AlternateBase, dark_color)
     dark_palette.setColor(QPalette.ToolTipBase, Qt.white)
     dark_palette.setColor(QPalette.ToolTipText, Qt.white)
-    dark_palette.setColor(QPalette.Text, Qt.white)
+    dark_palette.setColor(QPalette.ColorRole.Text, Qt.white)
     dark_palette.setColor(QPalette.Button, QColor(53, 53, 53))
     dark_palette.setColor(QPalette.ButtonText, Qt.white)
     dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
-    dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-    dark_palette.setColor(QPalette.HighlightedText, Qt.black)
+    dark_palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
+    dark_palette.setColor(QPalette.ColorRole.HighlightedText, Qt.black)
     
     app.setPalette(dark_palette)
     app.setStyleSheet("""
@@ -169,8 +169,8 @@ class CodeEditor(QPlainTextEdit):
         modificationChanged(bool): Sendet Änderungsstatus des Dokuments
     """
 
-    cursorPositionInfo = pyqtSignal(int, int)  # Zeile, Spalte
-    modificationChanged = pyqtSignal(bool)
+    cursorPositionInfo = Signal(int, int)  # Zeile, Spalte
+    modificationChanged = Signal(bool)
     
     # Klammer-Paare für Matching
     BRACKETS = {'(': ')', '[': ']', '{': '}', ')': '(', ']': '[', '}': '{'}
@@ -250,12 +250,12 @@ class CodeEditor(QPlainTextEdit):
         """Fügt die Completion ein"""
         tc = self.textCursor()
         extra = len(completion) - len(self.completer.completionPrefix())
-        tc.movePosition(QTextCursor.Left)
-        tc.movePosition(QTextCursor.EndOfWord)
+        tc.movePosition(QTextCursor.MoveOperation.Left)
+        tc.movePosition(QTextCursor.MoveOperation.EndOfWord)
         
         # Prüfe ob es ein Snippet ist
         if completion in PYTHON_SNIPPETS:
-            tc.movePosition(QTextCursor.StartOfWord, QTextCursor.KeepAnchor)
+            tc.movePosition(QTextCursor.MoveOperation.StartOfWord, QTextCursor.MoveMode.KeepAnchor)
             tc.removeSelectedText()
             tc.insertText(PYTHON_SNIPPETS[completion])
         else:
@@ -266,7 +266,7 @@ class CodeEditor(QPlainTextEdit):
     def text_under_cursor(self) -> str:
         """Gibt das Wort unter dem Cursor zurück"""
         tc = self.textCursor()
-        tc.select(QTextCursor.WordUnderCursor)
+        tc.select(QTextCursor.SelectionType.WordUnderCursor)
         return tc.selectedText()
 
     def keyPressEvent(self, event):
@@ -308,7 +308,7 @@ class CodeEditor(QPlainTextEdit):
             super().keyPressEvent(event)
             cursor = self.textCursor()
             cursor.insertText(bracket_pairs[event.text()])
-            cursor.movePosition(QTextCursor.Left)
+            cursor.movePosition(QTextCursor.MoveOperation.Left)
             self.setTextCursor(cursor)
             return
         
@@ -376,7 +376,7 @@ class CodeEditor(QPlainTextEdit):
                 sel1.format = fmt
                 cur1 = self.textCursor()
                 cur1.setPosition(bracket_pos)
-                cur1.setPosition(bracket_pos + 1, QTextCursor.KeepAnchor)
+                cur1.setPosition(bracket_pos + 1, QTextCursor.MoveMode.KeepAnchor)
                 sel1.cursor = cur1
                 self.bracket_selections.append(sel1)
                 
@@ -385,7 +385,7 @@ class CodeEditor(QPlainTextEdit):
                 sel2.format = fmt
                 cur2 = self.textCursor()
                 cur2.setPosition(match_pos)
-                cur2.setPosition(match_pos + 1, QTextCursor.KeepAnchor)
+                cur2.setPosition(match_pos + 1, QTextCursor.MoveMode.KeepAnchor)
                 sel2.cursor = cur2
                 self.bracket_selections.append(sel2)
         
@@ -604,8 +604,8 @@ class CodeEditor(QPlainTextEdit):
         # Zeile zentrieren
         if line > 0:
             cursor = self.textCursor()
-            cursor.movePosition(QTextCursor.Start)
-            cursor.movePosition(QTextCursor.Down, QTextCursor.MoveAnchor, line - 1)
+            cursor.movePosition(QTextCursor.MoveOperation.Start)
+            cursor.movePosition(QTextCursor.MoveOperation.Down, QTextCursor.MoveMode.MoveAnchor, line - 1)
             self.setTextCursor(cursor)
             self.centerCursor()
 
@@ -636,7 +636,7 @@ class CodeEditor(QPlainTextEdit):
             selection.format.setUnderlineStyle(QTextCharFormat.WaveUnderline)
             
             cursor = QTextCursor(block)
-            cursor.movePosition(QTextCursor.EndOfBlock, QTextCursor.KeepAnchor)
+            cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
             selection.cursor = cursor
             
             self.error_selections.append(selection)
@@ -655,7 +655,7 @@ class CodeEditor(QPlainTextEdit):
         if not self.isReadOnly():
             selection = QTextEdit.ExtraSelection()
             selection.format.setBackground(QColor(45, 45, 45))
-            selection.format.setProperty(QTextFormat.FullWidthSelection, True)
+            selection.format.setProperty(QTextFormat.Property.FullWidthSelection, True)
             selection.cursor = self.textCursor()
             selection.cursor.clearSelection()
             extraSelections.insert(0, selection)
@@ -668,9 +668,9 @@ class CodeEditor(QPlainTextEdit):
             self.highlightCurrentLine()
             return 0
         
-        flags = QTextDocument.FindFlags()
+        flags = QTextDocument.FindFlag(0)
         if case_sensitive:
-            flags |= QTextDocument.FindCaseSensitively
+            flags |= QTextDocument.FindFlag.FindCaseSensitively
         
         cursor = QTextCursor(self.document())
         highlight_format = QTextCharFormat()
@@ -714,7 +714,7 @@ class PythonSyntaxHighlighter(QSyntaxHighlighter):
         # Keywords (Blau)
         keyword_format = QTextCharFormat()
         keyword_format.setForeground(QColor(86, 156, 214))
-        keyword_format.setFontWeight(QFont.Bold)
+        keyword_format.setFontWeight(QFont.Weight.Bold)
         keywords = [
             'and', 'as', 'assert', 'break', 'class', 'continue', 'def',
             'del', 'elif', 'else', 'except', 'finally', 'for', 'from',
@@ -723,44 +723,42 @@ class PythonSyntaxHighlighter(QSyntaxHighlighter):
             'yield', 'True', 'False', 'None', 'self'
         ]
         for word in keywords:
-            self.highlighting_rules.append((QRegExp(r'\b' + word + r'\b'), keyword_format))
+            self.highlighting_rules.append((QRegularExpression(r'\b' + word + r'\b'), keyword_format))
         
         # Decorators (Lila)
         dec_format = QTextCharFormat()
         dec_format.setForeground(QColor(189, 147, 249))
-        self.highlighting_rules.append((QRegExp(r'@[^\n]+'), dec_format))
+        self.highlighting_rules.append((QRegularExpression(r'@[^\n]+'), dec_format))
 
         # Strings (Orange)
         string_format = QTextCharFormat()
         string_format.setForeground(QColor(206, 145, 120))
-        self.highlighting_rules.append((QRegExp(r'"[^"\\]*(\\.[^"\\]*)*"'), string_format))
-        self.highlighting_rules.append((QRegExp(r"'[^'\\]*(\\.[^'\\]*)*'"), string_format))
+        self.highlighting_rules.append((QRegularExpression(r'"[^"\\]*(\\.[^"\\]*)*"'), string_format))
+        self.highlighting_rules.append((QRegularExpression(r"'[^'\\]*(\\.[^'\\]*)*'"), string_format))
         
         # Comments (Grün)
         comment_format = QTextCharFormat()
         comment_format.setForeground(QColor(106, 153, 85))
         comment_format.setFontItalic(True)
-        self.highlighting_rules.append((QRegExp(r'#[^\n]*'), comment_format))
+        self.highlighting_rules.append((QRegularExpression(r'#[^\n]*'), comment_format))
         
         # Function/Class Definitions (Gelb)
         func_format = QTextCharFormat()
         func_format.setForeground(QColor(220, 220, 170))
-        self.highlighting_rules.append((QRegExp(r'\bdef\s+(\w+)'), func_format))
-        self.highlighting_rules.append((QRegExp(r'\bclass\s+(\w+)'), func_format))
+        self.highlighting_rules.append((QRegularExpression(r'\bdef\s+(\w+)'), func_format))
+        self.highlighting_rules.append((QRegularExpression(r'\bclass\s+(\w+)'), func_format))
         
         # Numbers (Hellgrün)
         number_format = QTextCharFormat()
         number_format.setForeground(QColor(181, 206, 168))
-        self.highlighting_rules.append((QRegExp(r'\b[0-9]+\.?[0-9]*\b'), number_format))
+        self.highlighting_rules.append((QRegularExpression(r'\b[0-9]+\.?[0-9]*\b'), number_format))
 
     def highlightBlock(self, text):
-        for pattern, format in self.highlighting_rules:
-            expression = QRegExp(pattern)
-            index = expression.indexIn(text)
-            while index >= 0:
-                length = expression.matchedLength()
-                self.setFormat(index, length, format)
-                index = expression.indexIn(text, index + length)
+        for pattern, fmt in self.highlighting_rules:
+            match_iterator = pattern.globalMatch(text)
+            while match_iterator.hasNext():
+                match = match_iterator.next()
+                self.setFormat(match.capturedStart(), match.capturedLength(), fmt)
 
 
 # ============================================================================
@@ -1442,7 +1440,7 @@ class DebugOutputPanel(QWidget):
         command_history: Liste der eingegebenen pdb-Befehle
     """
 
-    debugStateChanged = pyqtSignal(bool)  # True = debugging aktiv
+    debugStateChanged = Signal(bool)  # True = debugging aktiv
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1605,7 +1603,7 @@ class DebugOutputPanel(QWidget):
 
     def send_command(self, cmd: str):
         """Sendet Befehl an pdb"""
-        if self.process and self.process.state() == QProcess.Running:
+        if self.process and self.process.state() == QProcess.ProcessState.Running:
             self.output.appendPlainText(f"(Pdb) {cmd}")
             self.process.write((cmd + "\n").encode())
             
@@ -1651,7 +1649,7 @@ class DebugOutputPanel(QWidget):
 
     def stop_process(self):
         """Stoppt laufenden Prozess"""
-        if self.process and self.process.state() == QProcess.Running:
+        if self.process and self.process.state() == QProcess.ProcessState.Running:
             self.process.kill()
             self.process.waitForFinished(1000)
 
@@ -1860,7 +1858,7 @@ class SearchReplaceBar(QFrame):
         self.current_match = 0
         self.total_matches = 0
         
-        self.setFrameShape(QFrame.StyledPanel)
+        self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setStyleSheet("QFrame { background: #2d2d2d; border: 1px solid #555; padding: 5px; }")
         
         layout = QVBoxLayout(self)
@@ -1964,16 +1962,16 @@ class SearchReplaceBar(QFrame):
         if not self.editor or not self.search_input.text():
             return
         
-        flags = QTextDocument.FindFlags()
+        flags = QTextDocument.FindFlag(0)
         if self.case_check.isChecked():
-            flags |= QTextDocument.FindCaseSensitively
+            flags |= QTextDocument.FindFlag.FindCaseSensitively
         
         cursor = self.editor.textCursor()
         found = self.editor.document().find(self.search_input.text(), cursor, flags)
         
         if found.isNull():
             # Wrap around
-            cursor.movePosition(QTextCursor.Start)
+            cursor.movePosition(QTextCursor.MoveOperation.Start)
             found = self.editor.document().find(self.search_input.text(), cursor, flags)
         
         if not found.isNull():
@@ -1988,16 +1986,16 @@ class SearchReplaceBar(QFrame):
         if not self.editor or not self.search_input.text():
             return
         
-        flags = QTextDocument.FindBackward
+        flags = QTextDocument.FindFlag.FindBackward
         if self.case_check.isChecked():
-            flags |= QTextDocument.FindCaseSensitively
+            flags |= QTextDocument.FindFlag.FindCaseSensitively
         
         cursor = self.editor.textCursor()
         cursor.setPosition(cursor.selectionStart())
         found = self.editor.document().find(self.search_input.text(), cursor, flags)
         
         if found.isNull():
-            cursor.movePosition(QTextCursor.End)
+            cursor.movePosition(QTextCursor.MoveOperation.End)
             found = self.editor.document().find(self.search_input.text(), cursor, flags)
         
         if not found.isNull():
@@ -2085,7 +2083,7 @@ class OutputPanel(QWidget):
 
     def run_script(self, script_path: str):
         """Führt ein Python-Skript aus und zeigt Output"""
-        if self.process and self.process.state() == QProcess.Running:
+        if self.process and self.process.state() == QProcess.ProcessState.Running:
             QMessageBox.warning(self, "Läuft", "Ein Prozess läuft bereits.")
             return
         
@@ -2116,9 +2114,9 @@ class OutputPanel(QWidget):
             self.append_output(text)
 
     def append_output(self, text: str):
-        self.output_text.moveCursor(QTextCursor.End)
+        self.output_text.moveCursor(QTextCursor.MoveOperation.End)
         self.output_text.insertPlainText(text)
-        self.output_text.moveCursor(QTextCursor.End)
+        self.output_text.moveCursor(QTextCursor.MoveOperation.End)
 
     def process_finished(self, exit_code, exit_status):
         self.append_output(f"\n{'='*50}\n✓ Beendet (Code: {exit_code})\n")
@@ -2154,8 +2152,8 @@ class EditorTab:
 class MultiTabEditor(QWidget):
     """Tab-basierter Editor für mehrere Dateien"""
     
-    currentEditorChanged = pyqtSignal(CodeEditor)
-    fileModified = pyqtSignal(str, bool)  # filename, is_modified
+    currentEditorChanged = Signal(CodeEditor)
+    fileModified = Signal(str, bool)  # filename, is_modified
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -2662,7 +2660,7 @@ class PythonArchitect(QMainWindow):
         l_layout.setContentsMargins(0,0,0,0)
         
         lbl_lib = QLabel("📚 Bibliothek")
-        lbl_lib.setFont(QFont("Segoe UI", 11, QFont.Bold))
+        lbl_lib.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         l_layout.addWidget(lbl_lib)
         
         self.tree = QTreeWidget()
@@ -2912,11 +2910,11 @@ class PythonArchitect(QMainWindow):
         cursor = editor.textCursor()
         dlg.line_spin.setValue(cursor.blockNumber() + 1)
         
-        if dlg.exec_() == QDialog.Accepted:
+        if dlg.exec() == QDialog.Accepted:
             line = dlg.get_line()
             cursor = editor.textCursor()
-            cursor.movePosition(QTextCursor.Start)
-            cursor.movePosition(QTextCursor.Down, QTextCursor.MoveAnchor, line - 1)
+            cursor.movePosition(QTextCursor.MoveOperation.Start)
+            cursor.movePosition(QTextCursor.MoveOperation.Down, QTextCursor.MoveMode.MoveAnchor, line - 1)
             editor.setTextCursor(cursor)
             editor.centerCursor()
             editor.setFocus()
@@ -2924,7 +2922,7 @@ class PythonArchitect(QMainWindow):
     def show_settings(self):
         """Öffnet den Einstellungs-Dialog"""
         dlg = SettingsDialog(self, self.settings)
-        if dlg.exec_() == QDialog.Accepted:
+        if dlg.exec() == QDialog.Accepted:
             self._apply_settings_to_editors()
             self.status_bar.showMessage("Einstellungen gespeichert", 3000)
 
@@ -3078,9 +3076,9 @@ class PythonArchitect(QMainWindow):
         editor = self.tab_editor.current_editor()
         if editor:
             cursor = editor.textCursor()
-            cursor.movePosition(QTextCursor.Start)
-            cursor.movePosition(QTextCursor.Down, QTextCursor.MoveAnchor, line - 1)
-            cursor.movePosition(QTextCursor.Right, QTextCursor.MoveAnchor, col)
+            cursor.movePosition(QTextCursor.MoveOperation.Start)
+            cursor.movePosition(QTextCursor.MoveOperation.Down, QTextCursor.MoveMode.MoveAnchor, line - 1)
+            cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.MoveAnchor, col)
             editor.setTextCursor(cursor)
             editor.centerCursor()
             editor.setFocus()
@@ -3122,7 +3120,7 @@ class PythonArchitect(QMainWindow):
         btn.clicked.connect(dlg.close)
         layout.addWidget(btn)
         
-        dlg.exec_()
+        dlg.exec()
 
     def update_git_status(self):
         """Aktualisiert Git-Status für aktuellen Editor"""
@@ -3355,7 +3353,7 @@ class PythonArchitect(QMainWindow):
                 act = menu.addAction("🗑️ Löschen (Gesperrt)")
                 act.setEnabled(False)
         
-        menu.exec_(self.tree.viewport().mapToGlobal(position))
+        menu.exec(self.tree.viewport().mapToGlobal(position))
 
 
     # --- LIBRARY ACTIONS ---
@@ -3363,7 +3361,7 @@ class PythonArchitect(QMainWindow):
     def new_library_item(self):
         topics = self.lib_manager.get_topics()
         dlg = SnippetDialog(self, topics)
-        if dlg.exec_() == QDialog.Accepted:
+        if dlg.exec() == QDialog.Accepted:
             t, n, c = dlg.get_data()
             if t and n:
                 success, msg = self.lib_manager.save_snippet(t, n, c)
@@ -3378,7 +3376,7 @@ class PythonArchitect(QMainWindow):
         topics = self.lib_manager.get_topics()
         
         dlg = SnippetDialog(self, topics, data['topic'], data['name'], content)
-        if dlg.exec_() == QDialog.Accepted:
+        if dlg.exec() == QDialog.Accepted:
             t, n, c = dlg.get_data()
             if t != data['topic'] or n != data['name']:
                 if data['locked']:
@@ -3432,7 +3430,7 @@ class PythonArchitect(QMainWindow):
         cursor = editor.textCursor()
         
         if editor.toPlainText().strip():
-            cursor.movePosition(QTextCursor.End)
+            cursor.movePosition(QTextCursor.MoveOperation.End)
             cursor.insertText("\n\n")
         
         cursor.insertText(text)
@@ -3580,7 +3578,7 @@ def main():
     window = PythonArchitect()
     window.show()
     
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":
