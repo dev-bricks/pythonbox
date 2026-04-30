@@ -3573,9 +3573,15 @@ class PythonArchitect(QMainWindow):
 
 def main():
     app = QApplication(sys.argv)
+    icon_path = Path(__file__).with_name("PythonBox.ico")
+    icon = QIcon(str(icon_path)) if icon_path.exists() else QIcon()
+    if not icon.isNull():
+        app.setWindowIcon(icon)
     set_dark_theme(app)
     
     window = PythonArchitect()
+    if not icon.isNull():
+        window.setWindowIcon(icon)
     window.show()
     
     sys.exit(app.exec())

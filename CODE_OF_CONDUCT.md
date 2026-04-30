@@ -4,30 +4,27 @@
 
 ### Unser Versprechen
 
-Wir als Mitglieder, Beitragende und Leitende verpflichten uns, die Teilnahme an unserer
-Community zu einer belaetigungsfreien Erfahrung fuer alle zu machen, unabhaengig von
-Alter, Koerpergroesse, sichtbarer oder unsichtbarer Behinderung, ethnischer Zugehoerigkeit,
-Geschlechtsmerkmalen, Geschlechtsidentitaet und -ausdruck, Erfahrungsgrad, Bildung,
-sozio-oekonomischem Status, Nationalitaet, persoenlichem Aussehen, Herkunft, Religion
-oder sexueller Identitaet und Orientierung.
+Wir verpflichten uns, die Teilnahme an diesem Projekt respektvoll, sachlich und frei von Belästigung zu gestalten, unabhängig von Alter, Körpergröße, sichtbarer oder unsichtbarer Behinderung, ethnischer Zugehörigkeit, Geschlechtsmerkmalen, Geschlechtsidentität, Erfahrungsgrad, Bildung, sozioökonomischem Status, Nationalität, persönlichem Aussehen, Herkunft, Religion oder sexueller Identität und Orientierung.
 
 ### Unsere Standards
 
-Beispiele fuer Verhalten, das zu einem positiven Umfeld beitraegt:
-- Verwendung einladender und inklusiver Sprache
-- Respektvoller Umgang mit unterschiedlichen Standpunkten und Erfahrungen
-- Konstruktive Kritik hoeflich annehmen
-- Fokus auf das Beste fuer die Community
+Erwünschtes Verhalten:
 
-Inakzeptables Verhalten umfasst:
-- Trolling, beleidigende Kommentare und persoenliche oder politische Angriffe
-- Oeffentliche oder private Belaestigung
-- Veroeffentlichung privater Informationen anderer ohne ausdrueckliche Erlaubnis
+- Einladende und inklusive Sprache verwenden
+- Unterschiedliche Standpunkte respektieren
+- Konstruktive Kritik sachlich geben und annehmen
+- Den Fokus auf die Qualität und Sicherheit des Projekts legen
+
+Nicht akzeptiertes Verhalten:
+
+- Beleidigungen, persönliche Angriffe oder absichtliche Provokation
+- Öffentliche oder private Belästigung
+- Veröffentlichung privater Informationen ohne ausdrückliche Erlaubnis
+- Wiederholtes Stören von Issues, Pull Requests oder Diskussionen
 
 ### Durchsetzung
 
-Faelle von missbräuchlichem Verhalten koennen dem Projektteam unter
-**lukas@geiger.sh** gemeldet werden. Alle Beschwerden werden geprueft und untersucht.
+Melden Sie Vorfälle über nicht öffentliche GitHub-Kanäle an die Repository-Maintainer. Bitte veröffentlichen Sie keine privaten Informationen in öffentlichen Issues. Meldungen werden sachlich geprüft; mögliche Maßnahmen reichen von Moderation über Verwarnung bis zum Ausschluss aus der Projektkommunikation.
 
 ---
 
@@ -35,30 +32,28 @@ Faelle von missbräuchlichem Verhalten koennen dem Projektteam unter
 
 ### Our Pledge
 
-We as members, contributors, and leaders pledge to make participation in our
-community a harassment-free experience for everyone, regardless of age, body size,
-visible or invisible disability, ethnicity, sex characteristics, gender identity
-and expression, level of experience, education, socio-economic status, nationality,
-personal appearance, race, religion, or sexual identity and orientation.
+We are committed to making participation in this project respectful, factual, and harassment-free, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity, level of experience, education, socio-economic status, nationality, personal appearance, race, religion, or sexual identity and orientation.
 
 ### Our Standards
 
-Examples of behavior that contributes to a positive environment:
-- Using welcoming and inclusive language
-- Being respectful of differing viewpoints and experiences
-- Gracefully accepting constructive criticism
-- Focusing on what is best for the community
+Expected behavior:
 
-Unacceptable behavior includes:
-- Trolling, insulting comments, and personal or political attacks
+- Use welcoming and inclusive language
+- Respect different viewpoints
+- Give and accept constructive criticism professionally
+- Focus on project quality and safety
+
+Unacceptable behavior:
+
+- Insults, personal attacks, or deliberate provocation
 - Public or private harassment
-- Publishing others' private information without explicit permission
+- Publishing private information without explicit permission
+- Repeated disruption of issues, pull requests, or discussions
 
 ### Enforcement
 
-Instances of abusive behavior may be reported to the project team at
-**lukas@geiger.sh**. All complaints will be reviewed and investigated.
+Report incidents to the repository maintainers through non-public GitHub channels. Do not publish private information in public issues. Reports will be reviewed fairly; possible actions range from moderation and warnings to exclusion from project communication.
 
 ---
 
-*Basierend auf dem [Contributor Covenant v2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/)*
+Based on the Contributor Covenant v2.1.

@@ -1,130 +1,99 @@
 # Python Code Architect (PythonBox) v8
 
-Eine leichtgewichtige Python-IDE mit modernem Dark Theme. Schneller Start, niedriger RAM-Verbrauch, integrierter Debugger.
+PythonBox ist eine leichtgewichtige Python-IDE mit Dark Theme, integriertem Debugging, Code Folding und optionaler Editor-Integration für VS Code und PyCharm.
+
+PythonBox is a lightweight Python IDE with a dark theme, integrated debugging, code folding, and optional VS Code/PyCharm integration.
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
 ![PySide6](https://img.shields.io/badge/PySide6-6.5+-green.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-## Features
-
-### Debugging
-- **VS Code Integration** - Direkt in VS Code oeffnen/debuggen
-- **PDB Debugger** - Interaktiver Debugger im Output-Panel
-- **Breakpoints** - Visuelle Breakpoint-Verwaltung (Klick auf Zeilennummer)
-- **Debug-Toolbar** - Step In/Out/Over Controls
-- **PyCharm Integration** - Optional
+## Funktionen / Features
 
 ### Editor
-- **Syntax-Highlighting** - Python-spezifisch
-- **Auto-Completion** - Keywords, Builtins, Snippets
-- **Code Folding** - Klassen/Funktionen einklappen
-- **Minimap** - Code-Vorschau rechts
-- **Bracket Matching** - Klammer-Hervorhebung
+- Python-Syntax-Highlighting
+- Auto-Completion für Keywords, Builtins und Snippets
+- Code Folding für Klassen und Funktionen
+- Minimap und Bracket Matching
+- Mehrere Dateien über Tabs
 
-### Entwicklung
-- **Linter-Integration** - Pylint/Flake8 Fehleranzeige
-- **Git-Integration** - Status, Diff, Modified-Markierung
-- **Error-Markierungen** - Rote Wellenlinien
-- **Tab-System** - Mehrere Dateien gleichzeitig
+### Debugging und Entwicklung
+- Ausführen über `sys.executable`
+- PDB-Debugger im Output-Panel
+- Breakpoints über die Zeilennummern
+- Debug-Toolbar mit Step In, Step Over und Step Out
+- Linter-Integration für Pylint und Flake8
+- Git-Status, Diff und Modified-Markierung
+
+### Windows-Paketierung
+- `PythonBox.ico` wird als App- und Fenstericon verwendet, wenn die Datei vorhanden ist.
+- `build_exe.bat` erstellt eine kompakte Windows-EXE mit PyInstaller.
+- `START_PythonBox_v8.bat` startet die Anwendung direkt aus dem Checkout.
+
+## Screenshot
+
+![Hauptfenster / Main window](README/screenshots/main.png)
 
 ## Installation
 
+### Voraussetzungen / Requirements
+- Python 3.8+
+- PySide6 6.5+
+- Optional: Git, Pylint, Flake8, VS Code, PyCharm
+
+### Start aus dem Quellcode / Run from source
+
 ```bash
-# Repository klonen
-git clone https://github.com/lukisch/pythonbox.git
+git clone https://github.com/dev-bricks/pythonbox.git
 cd pythonbox
-
-# Dependencies installieren
 pip install -r requirements.txt
-
-# Starten
 python PythonBox_v8.py
 ```
 
-### Windows
-Alternativ: `START_PythonBox_v8.bat` ausfuehren.
+Unter Windows kann alternativ `START_PythonBox_v8.bat` per Doppelklick gestartet werden.
 
-## Keyboard Shortcuts
+### Windows-EXE bauen / Build Windows EXE
 
-| Shortcut | Funktion |
-|----------|----------|
-| `Ctrl+F` | Suchen |
-| `Ctrl+H` | Ersetzen |
-| `Ctrl+G` | Gehe zu Zeile |
-| `Ctrl+/` | Kommentieren |
-| `F5` | Ausfuehren |
-| `F9` | Breakpoint Toggle |
+```bash
+pip install pyinstaller
+build_exe.bat
+```
+
+Das Build-Ergebnis liegt anschließend in `dist/`. Build-Artefakte und lokale Releases sind bewusst nicht Teil des Git-Repositories.
+
+## Tastenkürzel / Keyboard Shortcuts
+
+| Shortcut | Funktion / Action |
+|---|---|
+| `Ctrl+F` | Suchen / Find |
+| `Ctrl+H` | Ersetzen / Replace |
+| `Ctrl+G` | Gehe zu Zeile / Go to line |
+| `Ctrl+/` | Kommentieren / Toggle comment |
+| `F5` | Ausführen / Run |
+| `F9` | Breakpoint umschalten / Toggle breakpoint |
 | `F10` | Step Over |
 | `F11` | Step Into |
 
-## Screenshots
+## Datenschutz / Privacy
 
-Das Dark Theme basiert auf dem Fusion-Style mit VS Code-aehnlicher Farbpalette.
+PythonBox arbeitet lokal. Es gibt keine Telemetrie, keinen Cloud-Sync und keine eingebauten externen API-Aufrufe. Dateien werden nur geöffnet, gespeichert oder ausgeführt, wenn Nutzerinnen und Nutzer diese Aktionen in der App auslösen.
 
-## Systemanforderungen
+PythonBox runs locally. It does not include telemetry, cloud sync, or built-in external API calls. Files are opened, saved, or executed only when users trigger those actions in the app.
 
-- Python 3.8+
-- PySide6 6.5+
-- Windows / Linux / macOS
+## Repository-Hygiene
 
-### Optionale Integrationen
-- VS Code (fuer "In VS Code oeffnen")
-- PyCharm (fuer "In PyCharm oeffnen")
-- Pylint / Flake8 (fuer Linter-Support)
-- Git (fuer Git-Integration)
+Nicht versioniert werden interne Aufgabenlisten, Test-Locks, lokale Build-Artefakte, Release-Ordner, virtuelle Umgebungen, Datenbanken, Secrets und IDE-/OS-Metadaten. Details stehen in `.gitignore`.
 
 ## Roadmap
 
-Geplante Erweiterung zur Multi-Language IDE "CodeBox":
-- JavaScript/TypeScript Support
-- C/C++ Support (mit GDB)
-- Rust Support
-- Go Support
-- Plugin-System fuer Sprachen
+PythonBox bleibt als schlanke Python-IDE erhalten. Die geplante Multi-Language-Erweiterung läuft separat unter CodeBox.
 
-## Lizenz
+## Lizenz / License
 
-MIT License - siehe [LICENSE](LICENSE)
-
-## Autor
-
-Lukas Geiger ([@lukisch](https://github.com/lukisch))
-
----
-
-## English
-
-A lightweight Python IDE with dark theme, debugging integration, and code folding.
-
-### Features
-
-- Syntax highlighting
-- Dark/light themes
-- Debugging integration
-- Code folding
-- Auto-completion
-
-### Installation
-
-```bash
-git clone https://github.com/lukisch/REL_Editor_PythonBox.git
-cd REL_Editor_PythonBox
-pip install -r requirements.txt
-python "PythonBox_v8.py"
-```
-
-### License
-
-See [LICENSE](LICENSE) for details.
-
----
+MIT License, siehe [LICENSE](LICENSE).
 
 ## Haftung / Liability
 
-Dieses Projekt ist eine **unentgeltliche Open-Source-Schenkung** im Sinne der §§ 516 ff. BGB. Die Haftung des Urhebers ist gemäß **§ 521 BGB** auf **Vorsatz und grobe Fahrlässigkeit** beschränkt. Ergänzend gelten die Haftungsausschlüsse aus GPL-3.0 / MIT / Apache-2.0 §§ 15–16 (je nach gewählter Lizenz).
+Dieses Projekt wird unentgeltlich als Open Source bereitgestellt. Nutzung auf eigenes Risiko. Es gibt keine Wartungszusage, keine Verfügbarkeitsgarantie und keine Gewähr für Fehlerfreiheit oder Eignung für einen bestimmten Zweck. Ergänzend gilt der Haftungsausschluss der MIT-Lizenz.
 
-Nutzung auf eigenes Risiko. Keine Wartungszusage, keine Verfügbarkeitsgarantie, keine Gewähr für Fehlerfreiheit oder Eignung für einen bestimmten Zweck.
-
-This project is an unpaid open-source donation. Liability is limited to intent and gross negligence (§ 521 German Civil Code). Use at your own risk. No warranty, no maintenance guarantee, no fitness-for-purpose assumed.
-
+This project is provided as free open source software. Use it at your own risk. There is no maintenance commitment, availability guarantee, or warranty of fitness for a particular purpose. The MIT license disclaimer also applies.

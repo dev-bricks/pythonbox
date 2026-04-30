@@ -19,15 +19,71 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
-# Virtual Environment
+# Virtual environments
 .env
-.venv
+.env.*
+.venv/
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Secrets and private data
+credentials.json
+client_secret*.json
+token.json
+*.pem
+*.key
+*.p12
+*.pfx
+keyring/
+secrets/
+*.db
+*.sqlite
+*.sqlite3
+
+# Build artifacts and local releases
+releases/
+*.exe
+*.msi
+*.msix
+*.appx
+*.spec
+
+# Internal project management
+AUFGABEN.txt
+TEST.txt
+TESTS.txt
+TESTERGEBNISSE.txt
+BUGREPORT.md
+DIAGNOSE_REPORT.md
+SKILL.md
+CodeBox_Konzept.md
+Feature_Analyse_PythonBox.md
+PLAN.txt
+CLAUDE_PROMPT.txt
+
+# Private and archive folders
+.archive/
+_archive/
+_private/
+_USER/
+_WARTUNG/
+_Wartung/
+_DEV/
+_DEV_Verlauf/
+_BACKUP/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+tmpclaude-*
 
 # IDE
 .idea/
@@ -40,18 +96,8 @@ venv.bak/
 .DS_Store
 Thumbs.db
 Desktop.ini
-
-# Project specific
-.archive/
-releases/
-*.exe
-*.spec
-
-# Internal project management
-AUFGABEN.txt
-CodeBox_Konzept.md
-Feature_Analyse_PythonBox.md
 desktop.ini
+ehthumbs.db
 
-# Claude Code internal
+# Local agent config
 .claude/

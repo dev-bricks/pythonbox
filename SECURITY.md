@@ -1,29 +1,30 @@
 # Security Policy
 
+## Supported Versions
+
+The current `master` branch is the supported development line.
+
 ## Reporting a Vulnerability
 
-If you find a security vulnerability, please report it responsibly:
+Please report security issues privately through GitHub:
 
-1. **Do NOT open a public issue**
-2. **Use GitHub's [private vulnerability reporting](../../security/advisories/new)**
-3. Include: description, steps to reproduce, potential impact
+1. Open the repository's **Security** tab.
+2. Choose **Report a vulnerability**.
+3. Include affected files or versions, reproduction steps, impact, and any suggested mitigation.
 
-### How to Report
-
-1. Go to: Repository → Security → Advisories → New
-2. Fill out the form (title, description, severity, affected versions)
-3. Submit privately (not visible to public until disclosed)
-
-We will respond as soon as possible.
+Do not open public issues for vulnerabilities or include private data in screenshots, logs, or examples.
 
 ## Scope
 
-<!-- Adjust scope for your project -->
-- File system access
-- Database access
-- External API connections
+Relevant security areas include:
 
-## Response
+- Local file opening, saving, and execution workflows
+- Temporary files under the user's home directory
+- Linter, debugger, Git, VS Code, PyCharm, and PyInstaller integrations
+- Handling of paths, command arguments, and project files
 
-As a solo project, response times may vary. Critical issues will be
-prioritized. Please allow reasonable time before public disclosure.
+PythonBox does not include telemetry, bundled credentials, cloud sync, or external service API tokens.
+
+## Updates
+
+Confirmed vulnerabilities are fixed on the default branch and documented in the changelog or release notes when applicable.

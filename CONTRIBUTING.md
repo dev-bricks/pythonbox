@@ -2,112 +2,82 @@
 
 ## Deutsch
 
-Vielen Dank fuer Ihr Interesse, zu diesem Projekt beizutragen!
+Vielen Dank für Ihr Interesse an PythonBox.
 
-### Wie Sie beitragen koennen
+### Beiträge
 
-1. **Bug melden:** Erstellen Sie ein Issue mit dem Label `bug`
-2. **Feature vorschlagen:** Erstellen Sie ein Issue mit dem Label `enhancement`
-3. **Code beitragen:** Erstellen Sie einen Pull Request
+1. Bugs als GitHub Issue mit reproduzierbaren Schritten melden.
+2. Feature-Vorschläge als Issue mit erwarteter Nutzung beschreiben.
+3. Codeänderungen über Pull Requests einreichen.
 
 ### Pull Requests
 
-1. Forken Sie das Repository
-2. Erstellen Sie einen Feature-Branch: `git checkout -b feature/mein-feature`
-3. Committen Sie Ihre Aenderungen: `git commit -m "Beschreibung der Aenderung"`
-4. Pushen Sie den Branch: `git push origin feature/mein-feature`
-5. Erstellen Sie einen Pull Request
+1. Repository forken.
+2. Feature-Branch erstellen: `git checkout -b feature/mein-feature`
+3. Änderungen lokal testen.
+4. Commit erstellen: `git commit -m "Beschreibung der Änderung"`
+5. Branch pushen und Pull Request öffnen.
 
-### Contributor License Agreement (CLA)
+### Lokaler Start
 
-<!-- OPTION A: Fuer Projekte mit Dual-Licensing (RPX, etc.) -- diesen Block verwenden -->
-Dieses Projekt verwendet ein [Contributor License Agreement (CLA)](CLA.md).
-Bei Ihrem ersten Pull Request bestaetigen Sie bitte Ihre Zustimmung durch einen Kommentar:
-
-> I have read and agree to the Contributor License Agreement (CLA).
-
-Sie behalten Ihr Urheberrecht -- das CLA raeumt dem Projektinhaber lediglich Nutzungsrechte ein, die eine flexible Lizenzierung des Gesamtprojekts ermoeglichen.
-
-<!-- OPTION B: Fuer Community-Projekte ohne kommerzielle Plaene -- diesen Block stattdessen verwenden
-### Developer Certificate of Origin (DCO)
-
-Dieses Projekt verwendet den [Developer Certificate of Origin (DCO)](https://developercertificate.org/).
-Bitte signieren Sie jeden Commit mit `--signoff`:
-
-    git commit --signoff -m "Beschreibung der Aenderung"
-
-Damit bestaetigen Sie, dass Sie das Recht haben, den Code unter der Projektlizenz einzureichen.
--->
+```bash
+git clone https://github.com/dev-bricks/pythonbox.git
+cd pythonbox
+pip install -r requirements.txt
+python PythonBox_v8.py
+```
 
 ### Code-Richtlinien
 
-- Python: PEP 8 Stil
-- Encoding: UTF-8 fuer alle Dateien
-- Sprache: Code und Kommentare auf Deutsch oder Englisch
-- Keine hardcoded Pfade oder API-Keys
+- Python-Code folgt PEP 8.
+- GUI-Code nutzt PySide6.
+- Dokumente und Quelltexte werden als UTF-8 gespeichert.
+- Keine hardcodierten privaten Pfade, Tokens, Passwörter oder API-Keys.
+- Interne Dateien wie `AUFGABEN.txt`, Test-Locks, Build-Artefakte und lokale Releases bleiben unversioniert.
+- Dokumentation aktualisieren, wenn sich Bedienung, Installation oder Build-Prozess ändern.
 
-### Erste Schritte
+### Lizenz
 
-```bash
-git clone https://github.com/lukisch/REL_Editor_PythonBox.git
-cd REL_Editor_PythonBox
-pip install -r requirements.txt
-python main.py
-```
+Mit dem Einreichen eines Pull Requests bestätigen Sie, dass Sie die Rechte an Ihrem Beitrag besitzen und ihn unter der MIT-Lizenz dieses Projekts bereitstellen können.
 
 ---
 
 ## English
 
-Thank you for your interest in contributing to this project!
+Thank you for your interest in PythonBox.
 
-### How to Contribute
+### Contributions
 
-1. **Report bugs:** Create an issue with the `bug` label
-2. **Suggest features:** Create an issue with the `enhancement` label
-3. **Contribute code:** Create a Pull Request
+1. Report bugs as GitHub issues with reproducible steps.
+2. Describe feature requests as issues with the expected workflow.
+3. Submit code changes through pull requests.
 
 ### Pull Requests
 
-1. Fork the repository
+1. Fork the repository.
 2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Commit your changes: `git commit -m "Description of change"`
-4. Push the branch: `git push origin feature/my-feature`
-5. Create a Pull Request
+3. Test the changes locally.
+4. Commit: `git commit -m "Description of change"`
+5. Push the branch and open a pull request.
 
-### Contributor License Agreement (CLA)
+### Local Setup
 
-<!-- OPTION A: For projects with dual licensing (RPX, etc.) -->
-This project uses a [Contributor License Agreement (CLA)](CLA.md).
-On your first pull request, please confirm your agreement by commenting:
-
-> I have read and agree to the Contributor License Agreement (CLA).
-
-You retain your copyright -- the CLA only grants the project owner usage rights that enable flexible licensing of the overall project.
-
-<!-- OPTION B: For community projects without commercial plans
-### Developer Certificate of Origin (DCO)
-
-This project uses the [Developer Certificate of Origin (DCO)](https://developercertificate.org/).
-Please sign off every commit with `--signoff`:
-
-    git commit --signoff -m "Description of change"
-
-This certifies that you have the right to submit the code under the project license.
--->
+```bash
+git clone https://github.com/dev-bricks/pythonbox.git
+cd pythonbox
+pip install -r requirements.txt
+python PythonBox_v8.py
+```
 
 ### Code Guidelines
 
-- Python: PEP 8 style
-- Encoding: UTF-8 for all files
-- Language: Code and comments in German or English
-- No hardcoded paths or API keys
+- Follow PEP 8 for Python code.
+- Use PySide6 for GUI code.
+- Store documents and source files as UTF-8.
+- Do not commit private paths, tokens, passwords, or API keys.
+- Keep internal task files, test locks, build artifacts, and local releases out of Git.
+- Update documentation when usage, installation, or build behavior changes.
 
-### Getting Started
+### License
 
-```bash
-git clone https://github.com/lukisch/REL_Editor_PythonBox.git
-cd REL_Editor_PythonBox
-pip install -r requirements.txt
-python main.py
-```
+By submitting a pull request, you confirm that you have the rights to your contribution and can provide it under this project's MIT license.
