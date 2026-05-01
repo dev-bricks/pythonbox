@@ -4,7 +4,7 @@ PythonBox ist eine leichtgewichtige Python-IDE mit Dark Theme, integriertem Debu
 
 PythonBox is a lightweight Python IDE with a dark theme, integrated debugging, code folding, and optional VS Code/PyCharm integration.
 
-![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 ![PySide6](https://img.shields.io/badge/PySide6-6.5+-green.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
@@ -24,6 +24,7 @@ PythonBox is a lightweight Python IDE with a dark theme, integrated debugging, c
 - Debug-Toolbar mit Step In, Step Over und Step Out
 - Linter-Integration für Pylint und Flake8
 - Git-Status, Diff und Modified-Markierung
+- Qt6-kompatible Editor-Metriken und F5-Ausführung über das Debug-Output-Panel
 
 ### Windows-Paketierung
 - `PythonBox.ico` wird als App- und Fenstericon verwendet, wenn die Datei vorhanden ist.
@@ -37,7 +38,7 @@ PythonBox is a lightweight Python IDE with a dark theme, integrated debugging, c
 ## Installation
 
 ### Voraussetzungen / Requirements
-- Python 3.8+
+- Python 3.10+
 - PySide6 6.5+
 - Optional: Git, Pylint, Flake8, VS Code, PyCharm
 
@@ -60,6 +61,16 @@ build_exe.bat
 ```
 
 Das Build-Ergebnis liegt anschließend in `dist/`. Build-Artefakte und lokale Releases sind bewusst nicht Teil des Git-Repositories.
+
+## Tests
+
+Die Regressionstests prüfen die Qt6-API-Kompatibilität, die F5-Ausführung über `debug_output.run_normal`, die externe Terminal-Ausführung mit dem aktuellen Python-Interpreter und einen Offscreen-Smoke-Test für das Hauptfenster.
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+GitHub Actions führt diese Prüfungen unter Windows für Python 3.10 bis 3.12 aus.
 
 ## Tastenkürzel / Keyboard Shortcuts
 

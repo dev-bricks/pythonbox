@@ -50,22 +50,37 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QSplitter, QTreeWidget, QTreeWidgetItem,
     QMessageBox, QInputDialog, QPlainTextEdit, QFrame, QComboBox,
-    QDialog, QFormLayout, QDialogButtonBox, QTextEdit, QMenu, QAction,
+    QDialog, QFormLayout, QDialogButtonBox, QTextEdit, QMenu,
     QFileDialog, QProgressBar, QCheckBox, QStyle, QSystemTrayIcon,
-    QTabWidget, QTabBar, QLineEdit, QShortcut, QToolBar, QStatusBar,
+    QTabWidget, QTabBar, QLineEdit, QToolBar, QStatusBar,
     QDockWidget, QGroupBox, QRadioButton, QCompleter, QSpinBox,
     QScrollBar, QSlider, QSizePolicy, QListWidget, QListWidgetItem,
     QToolTip
 )
 from PySide6.QtCore import (
     Qt, QSize, QRect, QRegularExpression, QUrl, QMimeData, QProcess,
-    QTimer, Signal, QSettings, QStringListModel, QPoint
+    QTimer, Signal, QSettings, QStringListModel, QPoint, QEvent
 )
 from PySide6.QtGui import (
     QFont, QColor, QPainter, QTextFormat, QSyntaxHighlighter, 
     QTextCharFormat, QPalette, QIcon, QKeySequence, QTextCursor,
-    QTextDocument, QFontMetrics, QPen, QBrush
+    QTextDocument, QFontMetrics, QPen, QBrush, QAction, QShortcut
 )
+
+
+def build_external_python_command(script_path: Path) -> List[str]:
+    """Build a command that runs a script with the current Python interpreter."""
+    interpreter = sys.executable or ("python.exe" if sys.platform == "win32" else "python3")
+    script = str(script_path)
+
+    if sys.platform == "win32":
+        return ['cmd', '/c', 'start', '', 'cmd', '/k', interpreter, script]
+
+    terminal = shutil.which("x-terminal-emulator")
+    if terminal:
+        return [terminal, '-e', interpreter, script]
+
+    return [interpreter, script]
 
 # ============================================================================
 # MODERN UI THEME
@@ -219,7 +234,7 @@ class CodeEditor(QPlainTextEdit):
         font.setStyleHint(QFont.Monospace)
         self.setFont(font)
         self.setLineWrapMode(QPlainTextEdit.NoWrap)
-        self.setTabStopWidth(self.fontMetrics().width(' ') * 4)
+        self.setTabStopDistance(self.fontMetrics().horizontalAdvance(' ') * 4)
         
         # Auto-Completion Setup
         self.completer = None
@@ -481,7 +496,7 @@ class CodeEditor(QPlainTextEdit):
         while max_val >= 10:
             max_val //= 10
             digits += 1
-        width = 20 + self.fontMetrics().width('9') * digits
+        width = 20 + self.fontMetrics().horizontalAdvance('9') * digits
         # Platz für Git-Markierung
         width += 4
         return width
@@ -1528,7 +1543,7 @@ class DebugOutputPanel(QWidget):
 
     def eventFilter(self, obj, event):
         """Behandelt Pfeiltasten für Command-History"""
-        if obj == self.input_line and event.type() == event.KeyPress:
+        if obj == self.input_line and event.type() == QEvent.Type.KeyPress:
             if event.key() == Qt.Key_Up:
                 self.navigate_history(-1)
                 return True
@@ -2944,7 +2959,7 @@ class PythonArchitect(QMainWindow):
             editor.setFont(font)
             
             # Tab-Größe
-            editor.setTabStopWidth(editor.fontMetrics().width(' ') * tab_size)
+            editor.setTabStopDistance(editor.fontMetrics().horizontalAdvance(' ') * tab_size)
             
             # Zeilenumbruch
             if word_wrap:
@@ -3477,8 +3492,8 @@ class PythonArchitect(QMainWindow):
 
     # --- BUILD & RUN ---
 
-    def run_script(self):
-        """Führt das aktuelle Skript im integrierten Output-Panel aus"""
+    def run_current_code(self):
+        """Führt den aktuellen Editor-Inhalt über eine temporäre Datei aus."""
         editor = self.tab_editor.current_editor()
         if not editor:
             return
@@ -3486,9 +3501,13 @@ class PythonArchitect(QMainWindow):
         code = editor.toPlainText()
         if not code.strip():
             return
-        
+
+        tmp_path = Path.home() / ".python_baukasten" / "temp_run.py"
+        tmp_path.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path.write_text(code, encoding='utf-8')
+
         self.output_dock.show()
-        self.output_panel.run_code(code)
+        self.debug_output.run_normal(str(tmp_path))
 
     def run_script_external(self):
         """Führt das aktuelle Skript in externem Terminal aus"""
@@ -3503,11 +3522,8 @@ class PythonArchitect(QMainWindow):
         tmp_path = Path.home() / ".python_baukasten" / "temp_run.py"
         tmp_path.parent.mkdir(parents=True, exist_ok=True)
         tmp_path.write_text(code, encoding='utf-8')
-        
-        if sys.platform == "win32":
-            subprocess.Popen(['cmd', '/c', 'start', '', 'cmd', '/k', 'python', str(tmp_path)])
-        else:
-            subprocess.Popen(['x-terminal-emulator', '-e', 'python3', str(tmp_path)])
+
+        subprocess.Popen(build_external_python_command(tmp_path))
 
     def build_exe(self):
         if not shutil.which("pyinstaller"):
@@ -3561,10 +3577,7 @@ class PythonArchitect(QMainWindow):
             self.ext_tools_menu.addAction(f"🛠️ {name}", lambda t=tool: self.run_external_tool(t))
 
     def run_external_tool(self, path):
-        if sys.platform == "win32":
-            subprocess.Popen(['cmd', '/c', 'start', '', 'cmd', '/k', 'python', str(path)])
-        else:
-            subprocess.Popen(['python3', str(path)])
+        subprocess.Popen(build_external_python_command(Path(path)))
 
 
 # ============================================================================
