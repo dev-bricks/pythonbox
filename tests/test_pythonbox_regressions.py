@@ -1,6 +1,7 @@
 import ast
 import importlib.util
 import os
+import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -102,6 +103,60 @@ class ExternalPythonCommandTests(unittest.TestCase):
             cmd = module.build_external_python_command(Path("tool.py"))
 
         self.assertEqual(["/opt/current-python/bin/python", "tool.py"], cmd)
+
+
+class SettingsRegressionTests(unittest.TestCase):
+    def _temp_settings(self, module, folder: str):
+        settings_path = Path(folder) / "settings.ini"
+        return module.QSettings(str(settings_path), module.QSettings.Format.IniFormat)
+
+    def test_settings_dialog_reads_and_writes_runtime_minimap_key(self):
+        module = load_pythonbox_module()
+        app = module.QApplication.instance() or module.QApplication([])
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            settings = self._temp_settings(module, temp_dir)
+            settings.setValue("show_minimap", True)
+
+            dialog = module.SettingsDialog(settings=settings)
+            try:
+                emissions = []
+                dialog.settings_applied.connect(lambda: emissions.append(True))
+                self.assertTrue(dialog.minimap_check.isChecked())
+
+                dialog.minimap_check.setChecked(False)
+                dialog.apply_settings()
+
+                self.assertFalse(settings.value("show_minimap", True, type=bool))
+                self.assertEqual([True], emissions)
+            finally:
+                dialog.deleteLater()
+                app.processEvents()
+
+    def test_main_window_reacts_to_minimap_setting_changes(self):
+        module = load_pythonbox_module()
+        app = module.QApplication.instance() or module.QApplication([])
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            settings = self._temp_settings(module, temp_dir)
+            settings.setValue("show_minimap", False)
+
+            with mock.patch.object(module, "QSettings", lambda *args, **kwargs: settings):
+                window = module.PythonArchitect()
+
+            try:
+                self.assertFalse(window.minimap_action.isChecked())
+                self.assertTrue(window.minimap_container.isHidden())
+
+                settings.setValue("show_minimap", True)
+                window._apply_settings_to_editors()
+
+                self.assertTrue(window.minimap_action.isChecked())
+                self.assertFalse(window.minimap_container.isHidden())
+            finally:
+                window.close()
+                window.deleteLater()
+                app.processEvents()
 
 
 if __name__ == "__main__":

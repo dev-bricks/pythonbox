@@ -23,6 +23,8 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - Entfernte Qt6-APIs `fontMetrics().width()` und `setTabStopWidth()` durch aktuelle Alternativen ersetzt.
 - Externe Python-Skripte starten jetzt mit `sys.executable` statt einem hardcodierten `python`/`python3`.
 
+- Die Minimap-Option im Einstellungsdialog nutzt jetzt denselben `show_minimap`-Key wie das Ansicht-Menü und wird auch über den Apply-Button direkt auf die Hauptansicht angewendet.
+
 ## [1.0.0] - YYYY-MM-DD
 
 ### Hinzugefügt / Added

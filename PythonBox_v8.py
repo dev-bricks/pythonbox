@@ -1759,6 +1759,7 @@ class GotoLineDialog(QDialog):
 
 class SettingsDialog(QDialog):
     """Dialog für Editor-Einstellungen"""
+    settings_applied = Signal()
     
     def __init__(self, parent=None, settings: QSettings = None):
         super().__init__(parent)
@@ -1814,7 +1815,8 @@ class SettingsDialog(QDialog):
         
         # Minimap
         self.minimap_check = QCheckBox("Aktiviert")
-        self.minimap_check.setChecked(self.settings.value("minimap", False, type=bool))
+        legacy_minimap = self.settings.value("minimap", False, type=bool)
+        self.minimap_check.setChecked(self.settings.value("show_minimap", legacy_minimap, type=bool))
         display_layout.addRow("Minimap:", self.minimap_check)
         
         # Zeilennummern
@@ -1840,8 +1842,10 @@ class SettingsDialog(QDialog):
         self.settings.setValue("autocomplete", self.autocomplete_check.isChecked())
         self.settings.setValue("bracket_matching", self.bracket_check.isChecked())
         self.settings.setValue("theme", self.theme_combo.currentText())
-        self.settings.setValue("minimap", self.minimap_check.isChecked())
+        self.settings.setValue("show_minimap", self.minimap_check.isChecked())
         self.settings.setValue("line_numbers", self.line_numbers_check.isChecked())
+        self.settings.sync()
+        self.settings_applied.emit()
 
     def accept(self):
         self.apply_settings()
@@ -1855,7 +1859,7 @@ class SettingsDialog(QDialog):
             "autocomplete": self.autocomplete_check.isChecked(),
             "bracket_matching": self.bracket_check.isChecked(),
             "theme": self.theme_combo.currentText(),
-            "minimap": self.minimap_check.isChecked(),
+            "show_minimap": self.minimap_check.isChecked(),
             "line_numbers": self.line_numbers_check.isChecked(),
         }
 
@@ -2625,7 +2629,7 @@ class PythonArchitect(QMainWindow):
         view_menu = menubar.addMenu("Ansicht")
         self.minimap_action = view_menu.addAction("🗺️ Minimap")
         self.minimap_action.setCheckable(True)
-        self.minimap_action.setChecked(self.settings.value("show_minimap", False, type=bool))
+        self.minimap_action.setChecked(self._show_minimap_enabled())
         self.minimap_action.triggered.connect(self.toggle_minimap)
         
         self.linter_action = view_menu.addAction("⚠️ Linter-Panel")
@@ -2717,7 +2721,7 @@ class PythonArchitect(QMainWindow):
         self.minimap = None  # Wird bei Bedarf erstellt
         self.minimap_container = QWidget()
         self.minimap_container.setFixedWidth(80)
-        self.minimap_container.setVisible(self.settings.value("show_minimap", False, type=bool))
+        self.minimap_container.setVisible(self._show_minimap_enabled())
         editor_h_layout.addWidget(self.minimap_container)
         
         c_layout.addWidget(editor_container)
@@ -2937,8 +2941,8 @@ class PythonArchitect(QMainWindow):
     def show_settings(self):
         """Öffnet den Einstellungs-Dialog"""
         dlg = SettingsDialog(self, self.settings)
+        dlg.settings_applied.connect(self._apply_settings_to_editors)
         if dlg.exec() == QDialog.Accepted:
-            self._apply_settings_to_editors()
             self.status_bar.showMessage("Einstellungen gespeichert", 3000)
 
     def _apply_settings_to_editors(self):
@@ -2977,8 +2981,30 @@ class PythonArchitect(QMainWindow):
         font = self.preview_editor.font()
         font.setPointSize(font_size)
         self.preview_editor.setFont(font)
+        self._apply_minimap_setting()
 
     # --- NEU v7: MINIMAP, LINTER, GIT ---
+
+    def _show_minimap_enabled(self) -> bool:
+        """Liest die Minimap-Einstellung mit Fallback auf den alten Settings-Key."""
+        legacy_minimap = self.settings.value("minimap", False, type=bool)
+        return self.settings.value("show_minimap", legacy_minimap, type=bool)
+
+    def _apply_minimap_setting(self):
+        """Synchronisiert Settings-Dialog, Ansicht-Menue und Minimap-Container."""
+        checked = self._show_minimap_enabled()
+        self.minimap_action.blockSignals(True)
+        self.minimap_action.setChecked(checked)
+        self.minimap_action.blockSignals(False)
+        self.minimap_container.setVisible(checked)
+
+        if checked:
+            editor = self.tab_editor.current_editor()
+            if editor:
+                self._update_minimap(editor)
+        elif self.minimap:
+            self.minimap.deleteLater()
+            self.minimap = None
 
     def toggle_minimap(self, checked: bool):
         """Minimap ein-/ausschalten"""
