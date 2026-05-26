@@ -24,7 +24,9 @@ PythonBox is a lightweight Python IDE with a dark theme, integrated debugging, c
 - Debug-Toolbar mit Step In, Step Over und Step Out
 - Linter-Integration für Pylint und Flake8
 - Git-Status, Diff und Modified-Markierung
+- Kombinierte Git-Statuscodes werden lesbar angezeigt; ersetzte Diff-Zeilen werden als geändert statt nur als hinzugefügt markiert
 - Qt6-kompatible Editor-Metriken und F5-Ausführung über das Debug-Output-Panel
+- `Speichern unter` behält bei abgebrochenem Dialog den bisherigen Dateipfad
 - Die Minimap-Einstellung bleibt zwischen Ansicht-Menü und Einstellungsdialog synchron, inklusive Fallback für ältere Konfigurationen
 
 ### Windows-Paketierung
@@ -65,7 +67,7 @@ Das Build-Ergebnis liegt anschließend in `dist/`. Build-Artefakte und lokale Re
 
 ## Tests
 
-Die Regressionstests prüfen die Qt6-API-Kompatibilität, die F5-Ausführung über `debug_output.run_normal`, die externe Terminal-Ausführung mit dem aktuellen Python-Interpreter, die Minimap-Einstellungssynchronisation und einen Offscreen-Smoke-Test für das Hauptfenster.
+Die Regressionstests prüfen die Qt6-API-Kompatibilität, die F5-Ausführung über `debug_output.run_normal`, die externe Terminal-Ausführung mit dem aktuellen Python-Interpreter, die Minimap-Einstellungssynchronisation, Git-Status-/Diff-Erkennung, `Speichern unter`-Abbruchverhalten und einen Offscreen-Smoke-Test für das Hauptfenster.
 
 ```bash
 python -m unittest discover -s tests -v

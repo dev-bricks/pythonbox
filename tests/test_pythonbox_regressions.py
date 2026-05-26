@@ -1,6 +1,8 @@
 import ast
 import importlib.util
 import os
+import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -105,6 +107,57 @@ class ExternalPythonCommandTests(unittest.TestCase):
         self.assertEqual(["/opt/current-python/bin/python", "tool.py"], cmd)
 
 
+@unittest.skipUnless(shutil.which("git") is not None, "git required")
+class GitIntegrationRegressionTests(unittest.TestCase):
+    def _create_repo_with_tracked_file(self, initial_text: str):
+        tmp_dir = Path(tempfile.mkdtemp(prefix="pythonbox-git-"))
+        subprocess.run(["git", "init"], cwd=tmp_dir, check=True, capture_output=True)
+
+        file_path = tmp_dir / "demo.py"
+        file_path.write_text(initial_text, encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp_dir), "add", "demo.py"], check=True, capture_output=True)
+
+        self.addCleanup(shutil.rmtree, tmp_dir, True)
+        return tmp_dir, file_path
+
+    def test_git_status_formats_combined_codes_readably(self):
+        module = load_pythonbox_module()
+
+        _, file_path = self._create_repo_with_tracked_file("a\nb\nc\n")
+        file_path.write_text("a\nX\nc\n", encoding="utf-8")
+
+        git = module.GitIntegration()
+        status = git.get_file_status(str(file_path))
+
+        self.assertEqual("+ Added / ● Modified", status)
+
+    def test_git_modified_lines_classify_replacements_as_modified(self):
+        module = load_pythonbox_module()
+
+        _, file_path = self._create_repo_with_tracked_file("a\nb\nc\n")
+        file_path.write_text("a\nX\nc\n", encoding="utf-8")
+
+        git = module.GitIntegration()
+        added, modified, deleted = git.get_modified_lines(str(file_path))
+
+        self.assertEqual([], sorted(added))
+        self.assertEqual([2], sorted(modified))
+        self.assertEqual([1], sorted(deleted))
+
+    def test_git_modified_lines_classify_insertions_as_added(self):
+        module = load_pythonbox_module()
+
+        _, file_path = self._create_repo_with_tracked_file("a\nc\n")
+        file_path.write_text("a\nb\nc\n", encoding="utf-8")
+
+        git = module.GitIntegration()
+        added, modified, deleted = git.get_modified_lines(str(file_path))
+
+        self.assertEqual([2], sorted(added))
+        self.assertEqual([], sorted(modified))
+        self.assertEqual([], sorted(deleted))
+
+
 class SettingsRegressionTests(unittest.TestCase):
     def _temp_settings(self, module, folder: str):
         settings_path = Path(folder) / "settings.ini"
@@ -153,6 +206,30 @@ class SettingsRegressionTests(unittest.TestCase):
 
                 self.assertTrue(window.minimap_action.isChecked())
                 self.assertFalse(window.minimap_container.isHidden())
+            finally:
+                window.close()
+                window.deleteLater()
+                app.processEvents()
+
+    def test_save_file_as_cancel_keeps_original_path(self):
+        module = load_pythonbox_module()
+        app = module.QApplication.instance() or module.QApplication([])
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            original_path = Path(temp_dir) / "demo.py"
+            original_path.write_text("print('hi')\n", encoding="utf-8")
+
+            window = module.PythonArchitect()
+            try:
+                tab = window.tab_editor.current_tab()
+                tab.file_path = str(original_path)
+
+                with mock.patch.object(
+                    module.QFileDialog, "getSaveFileName", return_value=("", "")
+                ):
+                    window.save_file_as()
+
+                self.assertEqual(str(original_path), tab.file_path)
             finally:
                 window.close()
                 window.deleteLater()

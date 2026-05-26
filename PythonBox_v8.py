@@ -1176,6 +1176,38 @@ class GitIntegration:
     def __init__(self):
         self.has_git = shutil.which("git") is not None
 
+    @staticmethod
+    def _describe_status_code(code: str) -> str:
+        """Formatiert einen Git-Porcelain-Status in eine lesbare Beschreibung."""
+        if not code:
+            return ""
+        if code == "??":
+            return "? Untracked"
+        if code == "!!":
+            return "! Ignored"
+
+        status_labels = []
+        label_map = {
+            "M": "● Modified",
+            "A": "+ Added",
+            "D": "− Deleted",
+            "R": "→ Renamed",
+            "C": "⊕ Copied",
+            "U": "⚡ Conflict",
+        }
+
+        for char in code:
+            if char == " ":
+                continue
+            label = label_map.get(char)
+            if label and label not in status_labels:
+                status_labels.append(label)
+
+        if status_labels:
+            return " / ".join(status_labels)
+
+        return code.strip() or code
+
     def get_repo_root(self, file_path: str) -> Optional[str]:
         """Findet das Git-Repository Root"""
         if not self.has_git:
@@ -1208,17 +1240,8 @@ class GitIntegration:
             )
             status = result.stdout.strip()
             if status:
-                code = status[:2].strip()
-                status_map = {
-                    'M': '● Modified',
-                    'A': '+ Added',
-                    'D': '− Deleted',
-                    '??': '? Untracked',
-                    'R': '→ Renamed',
-                    'C': '⊕ Copied',
-                    'U': '⚡ Conflict'
-                }
-                return status_map.get(code, code)
+                code = status[:2]
+                return self._describe_status_code(code)
             return "✓ Unchanged"
         except Exception:
             return ""
@@ -1252,19 +1275,27 @@ class GitIntegration:
             return added, modified, deleted
         
         current_line = 0
+        pending_deletion = False
         for line in diff.split('\n'):
             if line.startswith('@@'):
                 # Parse @@ -start,count +start,count @@
                 match = re.search(r'\+(\d+)', line)
                 if match:
                     current_line = int(match.group(1)) - 1
+                pending_deletion = False
             elif line.startswith('+') and not line.startswith('+++'):
                 current_line += 1
-                added.add(current_line)
+                if pending_deletion:
+                    modified.add(current_line)
+                else:
+                    added.add(current_line)
+                pending_deletion = False
             elif line.startswith('-') and not line.startswith('---'):
                 deleted.add(current_line)
+                pending_deletion = True
             else:
                 current_line += 1
+                pending_deletion = False
         
         return added, modified, deleted
 
@@ -3330,9 +3361,11 @@ class PythonArchitect(QMainWindow):
     def save_file_as(self):
         tab = self.tab_editor.current_tab()
         if tab:
+            original_path = tab.file_path
             tab.file_path = None  # Force "Save As" dialog
             index = self.tab_editor.tab_widget.currentIndex()
-            self.tab_editor.save_tab(index)
+            if not self.tab_editor.save_tab(index):
+                tab.file_path = original_path
 
     # --- LIBRARY TREE ---
 

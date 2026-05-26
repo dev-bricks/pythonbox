@@ -22,8 +22,11 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - Doppelte `run_script`-Definition in `PythonArchitect` beseitigt, damit F5 wieder konsistent über das Debug-Output-Panel läuft.
 - Entfernte Qt6-APIs `fontMetrics().width()` und `setTabStopWidth()` durch aktuelle Alternativen ersetzt.
 - Externe Python-Skripte starten jetzt mit `sys.executable` statt einem hardcodierten `python`/`python3`.
-
 - Die Minimap-Option im Einstellungsdialog nutzt jetzt denselben `show_minimap`-Key wie das Ansicht-Menü und wird auch über den Apply-Button direkt auf die Hauptansicht angewendet.
+- Kombinierte Git-Porcelain-Statuscodes wie `AM` werden in der Statusleiste lesbar zusammengefasst.
+- Git-Diff-Markierungen behandeln ersetzte Zeilen als geändert statt als reine Hinzufügung.
+- `Speichern unter` stellt den bisherigen Dateipfad wieder her, wenn der Dialog abgebrochen wird.
+- Deutsche Übersetzungshinweise und Docstrings nutzen echte Umlaute.
 
 ## [1.0.0] - YYYY-MM-DD
 
