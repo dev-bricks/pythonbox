@@ -11,6 +11,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `PORTIERUNGSPLAN.md` mit Desktop-only-Strategie für Windows, macOS und Linux.
 - Regressionstests für Qt6-Editor-APIs, F5-Ausführung, externe Python-Kommandos und Offscreen-Fensteraufbau.
 - GitHub Actions Workflow für Windows-Regressionstests auf Python 3.10 bis 3.12.
+- README-SEO-Einstieg, präzisere Screenshot-Beschreibung und Discovery-Keywords für die GitHub-Suche.
 
 ### Geändert / Changed
 - README, Security Policy, Contributing Guide und Code of Conduct auf das aktuelle Repository `dev-bricks/pythonbox` und die MIT-Lizenz ausgerichtet.

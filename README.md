@@ -1,12 +1,20 @@
-# Python Code Architect (PythonBox) v8
+# PythonBox - lightweight Python IDE for Windows
 
-PythonBox ist eine leichtgewichtige Python-IDE mit Dark Theme, integriertem Debugging, Code Folding und optionaler Editor-Integration für VS Code und PyCharm.
+PythonBox is a local-first Python IDE for Windows developers who want a focused editor with PySide6, PDB debugging, code folding, linting, Git status, and optional handoff to VS Code or PyCharm.
 
-PythonBox is a lightweight Python IDE with a dark theme, integrated debugging, code folding, and optional VS Code/PyCharm integration.
+PythonBox ist eine lokale Python-IDE für Windows-Entwicklerinnen und -Entwickler, die einen fokussierten Editor mit PySide6, PDB-Debugging, Code Folding, Linting, Git-Status und optionaler Übergabe an VS Code oder PyCharm suchen.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 ![PySide6](https://img.shields.io/badge/PySide6-6.5+-green.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+
+## Why PythonBox?
+
+PythonBox is built for small Python scripts, local automation tools, learning workflows, and LLM-assisted coding sessions where a full IDE can feel too heavy. It keeps the core loop in one desktop window: open a file, edit Python, run it with the current interpreter, inspect output, debug with breakpoints, and check Git changes before handing the file to a larger IDE when needed.
+
+## Screenshot
+
+![PythonBox dark-theme Python IDE with editor, minimap, output panel, and local debugging controls](README/screenshots/main.png)
 
 ## Funktionen / Features
 
@@ -38,10 +46,6 @@ PythonBox is a lightweight Python IDE with a dark theme, integrated debugging, c
 - Windows bleibt die primäre Desktop-Plattform.
 - macOS und Linux sind sinnvolle Source-Smoke-Ziele aus derselben PySide6-Codebasis.
 - Android, iOS und Web/PWA sind keine aktuellen Ziele, weil PythonBox lokale Dateien, lokale Interpreter, Debugger, Linter und Git direkt nutzt.
-
-## Screenshot
-
-![Hauptfenster / Main window](README/screenshots/main.png)
 
 ## Installation
 
@@ -106,6 +110,10 @@ Nicht versioniert werden interne Aufgabenlisten, Test-Locks, lokale Build-Artefa
 ## Roadmap
 
 PythonBox bleibt als schlanke Python-IDE erhalten. Die geplante Multi-Language-Erweiterung läuft separat unter CodeBox.
+
+## Discovery keywords
+
+`python ide`, `lightweight python editor`, `pyside6 code editor`, `windows python ide`, `local-first developer tool`, `pdb debugger gui`, `python linting`, `code folding`, `git diff editor`, `vs code handoff`, `pycharm handoff`, `offline python editor`
 
 ## Lizenz / License
 
