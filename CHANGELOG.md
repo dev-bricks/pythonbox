@@ -8,6 +8,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ### Hinzugefügt / Added
 - App- und Fenstericon über `PythonBox.ico`.
 - `build_exe.bat` für lokale PyInstaller-Builds.
+- `PORTIERUNGSPLAN.md` mit Desktop-only-Strategie für Windows, macOS und Linux.
 - Regressionstests für Qt6-Editor-APIs, F5-Ausführung, externe Python-Kommandos und Offscreen-Fensteraufbau.
 - GitHub Actions Workflow für Windows-Regressionstests auf Python 3.10 bis 3.12.
 

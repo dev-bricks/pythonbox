@@ -34,6 +34,11 @@ PythonBox is a lightweight Python IDE with a dark theme, integrated debugging, c
 - `build_exe.bat` erstellt eine kompakte Windows-EXE mit PyInstaller.
 - `START_PythonBox_v8.bat` startet die Anwendung direkt aus dem Checkout.
 
+### Plattformstrategie
+- Windows bleibt die primäre Desktop-Plattform.
+- macOS und Linux sind sinnvolle Source-Smoke-Ziele aus derselben PySide6-Codebasis.
+- Android, iOS und Web/PWA sind keine aktuellen Ziele, weil PythonBox lokale Dateien, lokale Interpreter, Debugger, Linter und Git direkt nutzt.
+
 ## Screenshot
 
 ![Hauptfenster / Main window](README/screenshots/main.png)
