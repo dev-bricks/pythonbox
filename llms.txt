@@ -1,0 +1,37 @@
+# PythonBox
+
+Canonical repository: https://github.com/dev-bricks/pythonbox
+Primary README: https://github.com/dev-bricks/pythonbox#readme
+Owner organization: dev-bricks
+Default branch: master
+License: MIT
+
+## Summary
+
+PythonBox is a lightweight local-first Python IDE for Windows. It combines a PySide6 editor, PDB debugging, code folding, linting hooks, Git status/diff visibility, and optional handoff to VS Code or PyCharm.
+
+## Audience
+
+- Windows users who want a focused Python editor without a full IDE setup.
+- Learners and automation builders who need run/debug/lint/Git feedback in one local desktop app.
+- LLM-assisted coding workflows where files remain local and users want a small GUI around scripts.
+
+## What this repository contains
+
+- `PythonBox_v8.py`: main PySide6 application.
+- `README.md`: user-facing overview, installation, features, privacy boundary, and discovery keywords.
+- `PORTIERUNGSPLAN.md`: platform strategy for Windows-first desktop use and source-smoke portability.
+- `tests/`: regression tests for Qt6 compatibility, execution routing, Git diff/status handling, minimap settings, and an offscreen window smoke test.
+- `.github/workflows/tests.yml`: Windows regression test workflow for Python 3.10, 3.11, and 3.12.
+
+## Search phrases
+
+python ide; lightweight python editor; pyside6 code editor; windows python ide; local-first developer tool; pdb debugger gui; python linting; code folding; git diff editor; offline python editor; VS Code handoff; PyCharm handoff.
+
+## Disambiguation
+
+PythonBox is not Jetify Devbox, Microsoft Dev Box, Box Python SDK, Pybricks, or a containerized development environment. It is a local desktop Python editor and debugger.
+
+## Safety and privacy boundary
+
+PythonBox does not include telemetry, cloud sync, bundled credentials, or built-in external service API calls. It opens, saves, and executes files only through user-triggered local workflows.

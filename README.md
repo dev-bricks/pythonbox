@@ -6,7 +6,18 @@ PythonBox ist eine lokale Python-IDE für Windows-Entwicklerinnen und -Entwickle
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 ![PySide6](https://img.shields.io/badge/PySide6-6.5+-green.svg)
+![PythonBox tests](https://github.com/dev-bricks/pythonbox/actions/workflows/tests.yml/badge.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+
+## Start here
+
+| If you want to... | Start with |
+|---|---|
+| Try the IDE from source | `python PythonBox_v8.py` |
+| Build a local Windows EXE | `build_exe.bat` |
+| Check the regression suite | `python -m unittest discover -s tests -v` |
+| Understand the platform boundary | [PORTIERUNGSPLAN.md](PORTIERUNGSPLAN.md) |
+| Give an LLM or crawler the repo context | [llms.txt](llms.txt) |
 
 ## Why PythonBox?
 

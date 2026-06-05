@@ -6,6 +6,8 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Hinzugefügt / Added
+- `llms.txt` mit kanonischem Repo-Kontext, Zielgruppe, Suchphrasen und Abgrenzung zu Devbox/Python-Box/Pybricks.
+- README-Starttabelle und GitHub-Actions-Badge für schnellere Nutzerführung.
 - App- und Fenstericon über `PythonBox.ico`.
 - `build_exe.bat` für lokale PyInstaller-Builds.
 - `PORTIERUNGSPLAN.md` mit Desktop-only-Strategie für Windows, macOS und Linux.
@@ -14,6 +16,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - README-SEO-Einstieg, präzisere Screenshot-Beschreibung und Discovery-Keywords für die GitHub-Suche.
 
 ### Geändert / Changed
+- Community-Workflows auf `actions/stale@v10` und `actions/first-interaction@v3` aktualisiert.
 - README, Security Policy, Contributing Guide und Code of Conduct auf das aktuelle Repository `dev-bricks/pythonbox` und die MIT-Lizenz ausgerichtet.
 - `.gitignore` um interne Steuerungsdateien, Secrets, Datenbanken, Logs, Test-Locks und Windows-/Build-Artefakte erweitert.
 - Dokumentierte Mindestversion auf Python 3.10+ vereinheitlicht, passend zur Startdatei und Testmatrix.
