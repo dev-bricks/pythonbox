@@ -1,4 +1,4 @@
-# Python
+﻿# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -54,6 +54,7 @@ releases/
 *.msix
 *.appx
 *.spec
+!PythonBox.spec
 
 # Internal project management
 AUFGABEN.txt
@@ -101,3 +102,9 @@ ehthumbs.db
 
 # Local agent config
 .claude/
+docs/superpowers/
+# ---- Interne Steuerungsdateien ----
+DECISIONS.md
+PORTIERUNGSPLAN.md
+TODO.md
+DONE.md
