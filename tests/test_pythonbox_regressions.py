@@ -1,5 +1,6 @@
 import ast
 import importlib.util
+import json
 import os
 import shutil
 import subprocess
@@ -106,6 +107,20 @@ class ExternalPythonCommandTests(unittest.TestCase):
 
         self.assertEqual(["/opt/current-python/bin/python", "tool.py"], cmd)
 
+    def test_parse_startup_file_argument_accepts_open_flag(self):
+        module = load_pythonbox_module()
+
+        startup = module.parse_startup_file_argument(["--open", "demo.py"])
+
+        self.assertEqual("demo.py", startup)
+
+    def test_parse_startup_file_argument_accepts_bare_file_path(self):
+        module = load_pythonbox_module()
+
+        startup = module.parse_startup_file_argument(["script.py"])
+
+        self.assertEqual("script.py", startup)
+
 
 @unittest.skipUnless(shutil.which("git") is not None, "git required")
 class GitIntegrationRegressionTests(unittest.TestCase):
@@ -211,6 +226,57 @@ class SettingsRegressionTests(unittest.TestCase):
                 window.deleteLater()
                 app.processEvents()
 
+    def test_settings_json_roundtrip_preserves_portable_preferences(self):
+        module = load_pythonbox_module()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_settings = self._temp_settings(module, temp_dir)
+            source_settings.setValue("font_size", 14)
+            source_settings.setValue("tab_size", 2)
+            source_settings.setValue("word_wrap", True)
+            source_settings.setValue("theme", "Dracula")
+            source_settings.setValue("show_minimap", True)
+            source_settings.sync()
+
+            export_path = Path(temp_dir) / "pythonbox-settings-v1.json"
+            module.write_settings_export(source_settings, export_path)
+
+            payload = json.loads(export_path.read_text(encoding="utf-8"))
+            self.assertEqual(module.SETTINGS_EXPORT_SCHEMA, payload["schema"])
+            self.assertEqual("Dracula", payload["settings"]["theme"])
+
+            imported_settings = module.QSettings(
+                str(Path(temp_dir) / "imported.ini"),
+                module.QSettings.Format.IniFormat,
+            )
+            imported = module.import_settings_from_json(imported_settings, export_path)
+
+            self.assertEqual(14, imported["font_size"])
+            self.assertEqual(2, imported_settings.value("tab_size", 4, type=int))
+            self.assertTrue(imported_settings.value("word_wrap", False, type=bool))
+            self.assertEqual("Dracula", imported_settings.value("theme", "", type=str))
+            self.assertTrue(imported_settings.value("show_minimap", False, type=bool))
+
+    def test_main_window_opens_startup_file_in_bootstrap_tab(self):
+        module = load_pythonbox_module()
+        app = module.QApplication.instance() or module.QApplication([])
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            startup_path = Path(temp_dir) / "demo.py"
+            startup_path.write_text("print('hello')\n", encoding="utf-8")
+
+            window = module.PythonArchitect(startup_file=str(startup_path))
+            try:
+                current_tab = window.tab_editor.current_tab()
+                self.assertEqual(1, window.tab_editor.tab_widget.count())
+                self.assertIsNotNone(current_tab)
+                self.assertEqual(str(startup_path), current_tab.file_path)
+                self.assertEqual("print('hello')\n", current_tab.editor.toPlainText())
+            finally:
+                window.close()
+                window.deleteLater()
+                app.processEvents()
+
     def test_save_file_as_cancel_keeps_original_path(self):
         module = load_pythonbox_module()
         app = module.QApplication.instance() or module.QApplication([])
@@ -234,6 +300,35 @@ class SettingsRegressionTests(unittest.TestCase):
                 window.close()
                 window.deleteLater()
                 app.processEvents()
+
+
+class LibraryExportRegressionTests(unittest.TestCase):
+    def test_snippet_library_json_roundtrip_preserves_content_and_locks(self):
+        module = load_pythonbox_module()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_root = Path(temp_dir) / "source-library"
+            manager = module.LibraryManager(root=source_root)
+            manager.save_snippet("Tests", "Alpha", "print('eins')\n")
+            manager.toggle_lock("Tests", "Alpha")
+
+            export_path = Path(temp_dir) / "pythonbox-snippets-v1.json"
+            manager.export_to_json(export_path)
+
+            payload = json.loads(export_path.read_text(encoding="utf-8"))
+            self.assertEqual(module.SNIPPET_EXPORT_SCHEMA, payload["schema"])
+            exported_topic = next(topic for topic in payload["topics"] if topic["name"] == "Tests")
+            self.assertEqual("Alpha", exported_topic["snippets"][0]["name"])
+            self.assertTrue(exported_topic["snippets"][0]["locked"])
+
+            imported_root = Path(temp_dir) / "imported-library"
+            imported_manager = module.LibraryManager(root=imported_root)
+            result = imported_manager.import_from_json(export_path)
+
+            self.assertEqual(2, result["imported"])
+            self.assertIn("Tests", result["topics"])
+            self.assertEqual("print('eins')\n", imported_manager.get_content("Tests", "Alpha"))
+            self.assertTrue(imported_manager.is_locked("Tests", "Alpha"))
 
 
 if __name__ == "__main__":

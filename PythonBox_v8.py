@@ -42,7 +42,7 @@ import subprocess
 import re
 import threading
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Dict, List, Tuple
 
 # GUI Imports
@@ -81,6 +81,119 @@ def build_external_python_command(script_path: Path) -> List[str]:
         return [terminal, '-e', interpreter, script]
 
     return [interpreter, script]
+
+
+SNIPPET_EXPORT_SCHEMA = "pythonbox-snippets-v1"
+SETTINGS_EXPORT_SCHEMA = "pythonbox-settings-v1"
+PORTABLE_SETTINGS_FIELDS = (
+    ("font_size", int, 10),
+    ("tab_size", int, 4),
+    ("word_wrap", bool, False),
+    ("autocomplete", bool, True),
+    ("bracket_matching", bool, True),
+    ("theme", str, "Dark (Standard)"),
+    ("show_minimap", bool, False),
+    ("line_numbers", bool, True),
+)
+
+
+def _utc_export_timestamp() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _coerce_portable_bool(value) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        lowered = value.strip().lower()
+        if lowered in {"1", "true", "yes", "on"}:
+            return True
+        if lowered in {"0", "false", "no", "off"}:
+            return False
+    raise ValueError(f"Ungültiger Bool-Wert: {value!r}")
+
+
+def _coerce_setting_value(value, value_type):
+    if value_type is bool:
+        return _coerce_portable_bool(value)
+    if value_type is int:
+        return int(value)
+    if value_type is str:
+        if value is None:
+            raise ValueError("Ungültiger Text-Wert: None")
+        return str(value)
+    return value_type(value)
+
+
+def build_settings_export_payload(settings: QSettings) -> dict:
+    exported_settings = {}
+    for key, value_type, default in PORTABLE_SETTINGS_FIELDS:
+        exported_settings[key] = settings.value(key, default, type=value_type)
+    return {
+        "schema": SETTINGS_EXPORT_SCHEMA,
+        "exported_at": _utc_export_timestamp(),
+        "settings": exported_settings,
+    }
+
+
+def write_settings_export(settings: QSettings, path: Path) -> None:
+    payload = build_settings_export_payload(settings)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+def import_settings_payload(settings: QSettings, payload: dict) -> dict:
+    if not isinstance(payload, dict):
+        raise ValueError("Die Einstellungsdatei muss ein JSON-Objekt enthalten.")
+    if payload.get("schema") != SETTINGS_EXPORT_SCHEMA:
+        raise ValueError("Unbekanntes Einstellungsformat.")
+
+    values = payload.get("settings")
+    if not isinstance(values, dict):
+        raise ValueError("Der Schlüssel 'settings' muss ein Objekt sein.")
+
+    imported = {}
+    for key, value_type, _default in PORTABLE_SETTINGS_FIELDS:
+        if key not in values:
+            continue
+        imported[key] = _coerce_setting_value(values[key], value_type)
+        settings.setValue(key, imported[key])
+
+    settings.sync()
+    return imported
+
+
+def import_settings_from_json(settings: QSettings, path: Path) -> dict:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    return import_settings_payload(settings, payload)
+
+
+def parse_startup_file_argument(argv: Optional[List[str]] = None) -> Optional[str]:
+    """Extract an optional startup file path from CLI arguments."""
+    args = list(sys.argv[1:] if argv is None else argv)
+    pending_open = False
+
+    for arg in args:
+        if pending_open:
+            if arg:
+                return arg
+            pending_open = False
+            continue
+
+        if arg == "--open":
+            pending_open = True
+            continue
+
+        if arg.startswith("--open="):
+            value = arg.split("=", 1)[1]
+            return value or None
+
+        if arg and not arg.startswith("-"):
+            return arg
+
+    return None
 
 # ============================================================================
 # MODERN UI THEME
@@ -2339,7 +2452,7 @@ class MultiTabEditor(QWidget):
             QMessageBox.critical(self, "Fehler", f"Speichern fehlgeschlagen: {e}")
             return False
 
-    def open_file(self, file_path: str) -> int:
+    def open_file(self, file_path: str, replace_current_untitled: bool = False) -> int:
         """Öffnet eine Datei in einem neuen Tab"""
         # Prüfe ob Datei bereits geöffnet
         for idx, tab in self.tabs.items():
@@ -2349,6 +2462,22 @@ class MultiTabEditor(QWidget):
         
         try:
             content = Path(file_path).read_text(encoding='utf-8')
+            if replace_current_untitled and self.tab_widget.count() == 1:
+                current_index = self.tab_widget.currentIndex()
+                current_tab = self.tabs.get(current_index)
+                if (
+                    current_tab
+                    and not current_tab.file_path
+                    and not current_tab.is_modified
+                    and not current_tab.editor.toPlainText()
+                ):
+                    current_tab.editor.setPlainText(content)
+                    current_tab.editor.document().setModified(False)
+                    current_tab.file_path = file_path
+                    self.tab_widget.setTabText(current_index, Path(file_path).name)
+                    self.tab_widget.setCurrentIndex(current_index)
+                    return current_index
+
             return self.new_tab(file_path, content)
         except Exception as e:
             QMessageBox.critical(self, "Fehler", f"Öffnen fehlgeschlagen: {e}")
@@ -2429,8 +2558,8 @@ class ImportOptimizer:
 # ============================================================================
 
 class LibraryManager:
-    def __init__(self):
-        self.root = Path.home() / ".python_baukasten" / "library"
+    def __init__(self, root: Optional[Path] = None):
+        self.root = root or (Path.home() / ".python_baukasten" / "library")
         self.lock_file = self.root / "locks.json"
         self._ensure_defaults()
         self.locked_items = self._load_locks()
@@ -2504,6 +2633,105 @@ class LibraryManager:
             return True
         return False
 
+    def build_export_payload(self) -> dict:
+        topics = []
+        for topic in self.get_topics():
+            snippets = []
+            for name in self.get_items(topic):
+                snippets.append(
+                    {
+                        "name": name,
+                        "content": self.get_content(topic, name),
+                        "locked": self.is_locked(topic, name),
+                    }
+                )
+            topics.append({"name": topic, "snippets": snippets})
+
+        return {
+            "schema": SNIPPET_EXPORT_SCHEMA,
+            "exported_at": _utc_export_timestamp(),
+            "topics": topics,
+        }
+
+    def export_to_json(self, path: Path) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(self.build_export_payload(), indent=2, ensure_ascii=False),
+            encoding='utf-8',
+        )
+
+    def import_payload(self, payload: dict) -> dict:
+        if not isinstance(payload, dict):
+            raise ValueError("Die Snippet-Datei muss ein JSON-Objekt enthalten.")
+        if payload.get("schema") != SNIPPET_EXPORT_SCHEMA:
+            raise ValueError("Unbekanntes Snippet-Format.")
+
+        topics = payload.get("topics")
+        if not isinstance(topics, list):
+            raise ValueError("Der Schlüssel 'topics' muss eine Liste sein.")
+
+        imported = 0
+        skipped = 0
+        imported_topics = set()
+
+        for topic_entry in topics:
+            if not isinstance(topic_entry, dict):
+                skipped += 1
+                continue
+
+            topic_name = topic_entry.get("name")
+            snippets = topic_entry.get("snippets")
+            if not isinstance(topic_name, str) or not topic_name.strip() or not isinstance(snippets, list):
+                skipped += 1
+                continue
+
+            topic_name = topic_name.strip()
+            for snippet_entry in snippets:
+                if not isinstance(snippet_entry, dict):
+                    skipped += 1
+                    continue
+
+                snippet_name = snippet_entry.get("name")
+                content = snippet_entry.get("content")
+                locked = snippet_entry.get("locked", False)
+
+                if not isinstance(snippet_name, str) or not snippet_name.strip() or not isinstance(content, str):
+                    skipped += 1
+                    continue
+
+                snippet_name = snippet_name.strip()
+                success, _message = self.save_snippet(topic_name, snippet_name, content)
+                if not success:
+                    skipped += 1
+                    continue
+
+                key = f"{topic_name}/{snippet_name}"
+                try:
+                    is_locked = _coerce_portable_bool(locked)
+                except ValueError:
+                    skipped += 1
+                    self.delete_item(topic_name, snippet_name)
+                    continue
+
+                if is_locked:
+                    self.locked_items.add(key)
+                else:
+                    self.locked_items.discard(key)
+
+                imported += 1
+                imported_topics.add(topic_name)
+
+        self._save_locks()
+        return {
+            "imported": imported,
+            "skipped": skipped,
+            "topics": sorted(imported_topics),
+        }
+
+    def import_from_json(self, path: Path) -> dict:
+        payload = json.loads(path.read_text(encoding='utf-8'))
+        return self.import_payload(payload)
+
 
 # ============================================================================
 # DIALOGS
@@ -2558,7 +2786,7 @@ class PythonArchitect(QMainWindow):
     DEFAULT_WINDOW_WIDTH = 1500
     DEFAULT_WINDOW_HEIGHT = 950
 
-    def __init__(self):
+    def __init__(self, startup_file: Optional[str] = None):
         super().__init__()
         self.lib_manager = LibraryManager()
         self.settings = QSettings("PythonArchitect", "v8")
@@ -2581,6 +2809,8 @@ class PythonArchitect(QMainWindow):
         self.scan_external_tools()
         self._restore_window_state()
         self._apply_settings_to_editors()
+        if startup_file:
+            self.open_startup_file(startup_file)
 
     def setup_ui(self):
         self.setWindowTitle("Python Code Architect v8.0")
@@ -2601,7 +2831,14 @@ class PythonArchitect(QMainWindow):
         # Zuletzt geöffnete Dateien
         self.recent_menu = file_menu.addMenu("📂 Zuletzt geöffnet")
         self._update_recent_menu()
-        
+
+        file_menu.addSeparator()
+        exchange_menu = file_menu.addMenu("Austausch")
+        exchange_menu.addAction("Snippets als JSON exportieren...", self.export_snippets_json)
+        exchange_menu.addAction("Snippets aus JSON importieren...", self.import_snippets_json)
+        exchange_menu.addSeparator()
+        exchange_menu.addAction("Einstellungen als JSON exportieren...", self.export_settings_json)
+        exchange_menu.addAction("Einstellungen aus JSON importieren...", self.import_settings_json)
         file_menu.addSeparator()
         file_menu.addAction("Beenden", self.close, QKeySequence.Quit)
         
@@ -2975,6 +3212,47 @@ class PythonArchitect(QMainWindow):
         dlg.settings_applied.connect(self._apply_settings_to_editors)
         if dlg.exec() == QDialog.Accepted:
             self.status_bar.showMessage("Einstellungen gespeichert", 3000)
+
+    def export_settings_json(self):
+        default_path = str(Path.home() / f"{SETTINGS_EXPORT_SCHEMA}.json")
+        file_path, _filter = QFileDialog.getSaveFileName(
+            self,
+            "Einstellungen exportieren",
+            default_path,
+            "JSON-Dateien (*.json)",
+        )
+        if not file_path:
+            return
+
+        try:
+            write_settings_export(self.settings, Path(file_path))
+        except (OSError, ValueError, TypeError) as exc:
+            QMessageBox.warning(self, "Export fehlgeschlagen", str(exc))
+            return
+
+        self.status_bar.showMessage("Einstellungen als JSON exportiert", 3000)
+
+    def import_settings_json(self):
+        file_path, _filter = QFileDialog.getOpenFileName(
+            self,
+            "Einstellungen importieren",
+            str(Path.home()),
+            "JSON-Dateien (*.json)",
+        )
+        if not file_path:
+            return
+
+        try:
+            imported = import_settings_from_json(self.settings, Path(file_path))
+        except (OSError, json.JSONDecodeError, ValueError, TypeError) as exc:
+            QMessageBox.warning(self, "Import fehlgeschlagen", str(exc))
+            return
+
+        self._apply_settings_to_editors()
+        self.status_bar.showMessage(
+            f"{len(imported)} Einstellungen aus JSON importiert",
+            3000,
+        )
 
     def _apply_settings_to_editors(self):
         """Wendet Einstellungen auf alle Editoren an"""
@@ -3350,6 +3628,23 @@ class PythonArchitect(QMainWindow):
             self.tab_editor.open_file(path)
             self._add_recent_file(path)
 
+    def open_startup_file(self, file_path: str) -> bool:
+        """Open a file that was provided during app startup."""
+        resolved_path = Path(file_path).expanduser()
+        if not resolved_path.is_absolute():
+            resolved_path = (Path.cwd() / resolved_path).resolve()
+
+        index = self.tab_editor.open_file(
+            str(resolved_path),
+            replace_current_untitled=True,
+        )
+        if index < 0:
+            return False
+
+        self._add_recent_file(str(resolved_path))
+        self.status_bar.showMessage(f"Geöffnet: {resolved_path}", 3000)
+        return True
+
     def save_file(self):
         index = self.tab_editor.tab_widget.currentIndex()
         if self.tab_editor.save_tab(index):
@@ -3471,6 +3766,47 @@ class PythonArchitect(QMainWindow):
         data = item.data(0, Qt.UserRole)
         self.lib_manager.toggle_lock(data['topic'], data['name'])
         self.load_library_tree()
+
+    def export_snippets_json(self):
+        default_path = str(Path.home() / f"{SNIPPET_EXPORT_SCHEMA}.json")
+        file_path, _filter = QFileDialog.getSaveFileName(
+            self,
+            "Snippets exportieren",
+            default_path,
+            "JSON-Dateien (*.json)",
+        )
+        if not file_path:
+            return
+
+        try:
+            self.lib_manager.export_to_json(Path(file_path))
+        except (OSError, ValueError, TypeError) as exc:
+            QMessageBox.warning(self, "Export fehlgeschlagen", str(exc))
+            return
+
+        self.status_bar.showMessage("Snippet-Bibliothek als JSON exportiert", 3000)
+
+    def import_snippets_json(self):
+        file_path, _filter = QFileDialog.getOpenFileName(
+            self,
+            "Snippets importieren",
+            str(Path.home()),
+            "JSON-Dateien (*.json)",
+        )
+        if not file_path:
+            return
+
+        try:
+            result = self.lib_manager.import_from_json(Path(file_path))
+        except (OSError, json.JSONDecodeError, ValueError, TypeError) as exc:
+            QMessageBox.warning(self, "Import fehlgeschlagen", str(exc))
+            return
+
+        self.load_library_tree()
+        self.status_bar.showMessage(
+            f"{result['imported']} Snippets importiert, {result['skipped']} übersprungen",
+            4000,
+        )
 
     # --- DRAG & DROP ---
     
@@ -3643,15 +3979,17 @@ class PythonArchitect(QMainWindow):
 # ENTRY POINT
 # ============================================================================
 
-def main():
-    app = QApplication(sys.argv)
+def main(argv: Optional[List[str]] = None):
+    cli_args = list(sys.argv[1:] if argv is None else argv)
+    startup_file = parse_startup_file_argument(cli_args)
+    app = QApplication([sys.argv[0], *cli_args])
     icon_path = Path(__file__).with_name("PythonBox.ico")
     icon = QIcon(str(icon_path)) if icon_path.exists() else QIcon()
     if not icon.isNull():
         app.setWindowIcon(icon)
     set_dark_theme(app)
     
-    window = PythonArchitect()
+    window = PythonArchitect(startup_file=startup_file)
     if not icon.isNull():
         window.setWindowIcon(icon)
     window.show()

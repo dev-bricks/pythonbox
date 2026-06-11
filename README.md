@@ -47,6 +47,7 @@ PythonBox is built for small Python scripts, local automation tools, learning wo
 - Qt6-kompatible Editor-Metriken und F5-Ausführung über das Debug-Output-Panel
 - `Speichern unter` behält bei abgebrochenem Dialog den bisherigen Dateipfad
 - Die Minimap-Einstellung bleibt zwischen Ansicht-Menü und Einstellungsdialog synchron, inklusive Fallback für ältere Konfigurationen
+- Snippet-Bibliothek und portable Editor-Einstellungen lassen sich optional als JSON importieren und exportieren (`pythonbox-snippets-v1.json`, `pythonbox-settings-v1.json`)
 
 ### Windows-Paketierung
 - `PythonBox.ico` wird als App- und Fenstericon verwendet, wenn die Datei vorhanden ist.
@@ -76,6 +77,15 @@ python PythonBox_v8.py
 
 Unter Windows kann alternativ `START_PythonBox_v8.bat` per Doppelklick gestartet werden.
 
+Optional kann direkt beim Start eine Datei geöffnet werden:
+
+```bash
+python PythonBox_v8.py --open demo.py
+python PythonBox_v8.py demo.py
+```
+
+Weitere Headless-CLI-Befehle oder eine REST-API sind aktuell nicht Teil des Projekts.
+
 ### Windows-EXE bauen / Build Windows EXE
 
 ```bash
@@ -87,7 +97,7 @@ Das Build-Ergebnis liegt anschließend in `dist/`. Build-Artefakte und lokale Re
 
 ## Tests
 
-Die Regressionstests prüfen die Qt6-API-Kompatibilität, die F5-Ausführung über `debug_output.run_normal`, die externe Terminal-Ausführung mit dem aktuellen Python-Interpreter, die Minimap-Einstellungssynchronisation, Git-Status-/Diff-Erkennung, `Speichern unter`-Abbruchverhalten und einen Offscreen-Smoke-Test für das Hauptfenster.
+Die Regressionstests prüfen die Qt6-API-Kompatibilität, die F5-Ausführung über `debug_output.run_normal`, die externe Terminal-Ausführung mit dem aktuellen Python-Interpreter, die Minimap-Einstellungssynchronisation, Git-Status-/Diff-Erkennung, den JSON-Austausch für Snippets und Einstellungen, `Speichern unter`-Abbruchverhalten und einen Offscreen-Smoke-Test für das Hauptfenster.
 
 ```bash
 python -m unittest discover -s tests -v
