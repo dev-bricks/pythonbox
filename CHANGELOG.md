@@ -17,6 +17,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - `PORTIERUNGSPLAN.md` mit Desktop-only-Strategie für Windows, macOS und Linux.
 - Optionaler JSON-Austausch für Snippet-Bibliothek und portable Editor-Einstellungen (`pythonbox-snippets-v1.json`, `pythonbox-settings-v1.json`).
 - Regressionstests für Qt6-Editor-APIs, F5-Ausführung, externe Python-Kommandos und Offscreen-Fensteraufbau.
+- Zusätzlicher Git-Regressionstest für CRLF-Ersatzzeilen, damit Windows-Diffs mit ersetzten Zeilen weiterhin als `modified` statt als reine `added`-Treffer klassifiziert bleiben.
 - GitHub Actions Workflow für Windows-Regressionstests auf Python 3.10 bis 3.12.
 - README-SEO-Einstieg, präzisere Screenshot-Beschreibung und Discovery-Keywords für die GitHub-Suche.
 
@@ -38,6 +39,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - Die Minimap-Option im Einstellungsdialog nutzt jetzt denselben `show_minimap`-Key wie das Ansicht-Menü und wird auch über den Apply-Button direkt auf die Hauptansicht angewendet.
 - Kombinierte Git-Porcelain-Statuscodes wie `AM` werden in der Statusleiste lesbar zusammengefasst.
 - Git-Diff-Markierungen behandeln ersetzte Zeilen als geändert statt als reine Hinzufügung.
+- Der zuvor offene Windows-Gesamtlauf-Befund rund um `test_git_modified_lines_classify_replacements_as_modified` ist lokal nicht mehr reproduzierbar; der vollständige `unittest`-Lauf ist wieder grün und der Git-Diff-Fall wird jetzt zusätzlich mit expliziten CRLF-Dateien abgesichert.
 - `Speichern unter` stellt den bisherigen Dateipfad wieder her, wenn der Dialog abgebrochen wird.
 - Deutsche Übersetzungshinweise und Docstrings nutzen echte Umlaute.
 

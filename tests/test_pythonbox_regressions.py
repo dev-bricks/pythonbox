@@ -124,12 +124,15 @@ class ExternalPythonCommandTests(unittest.TestCase):
 
 @unittest.skipUnless(shutil.which("git") is not None, "git required")
 class GitIntegrationRegressionTests(unittest.TestCase):
-    def _create_repo_with_tracked_file(self, initial_text: str):
+    def _write_text(self, file_path: Path, text: str, newline: str = "\n"):
+        file_path.write_bytes(text.replace("\n", newline).encode("utf-8"))
+
+    def _create_repo_with_tracked_file(self, initial_text: str, *, newline: str = "\n"):
         tmp_dir = Path(tempfile.mkdtemp(prefix="pythonbox-git-"))
         subprocess.run(["git", "init"], cwd=tmp_dir, check=True, capture_output=True)
 
         file_path = tmp_dir / "demo.py"
-        file_path.write_text(initial_text, encoding="utf-8")
+        self._write_text(file_path, initial_text, newline=newline)
         subprocess.run(["git", "-C", str(tmp_dir), "add", "demo.py"], check=True, capture_output=True)
 
         self.addCleanup(shutil.rmtree, tmp_dir, True)
@@ -171,6 +174,19 @@ class GitIntegrationRegressionTests(unittest.TestCase):
         self.assertEqual([2], sorted(added))
         self.assertEqual([], sorted(modified))
         self.assertEqual([], sorted(deleted))
+
+    def test_git_modified_lines_classify_crlf_replacements_as_modified(self):
+        module = load_pythonbox_module()
+
+        _, file_path = self._create_repo_with_tracked_file("a\nb\nc\n", newline="\r\n")
+        self._write_text(file_path, "a\nX\nc\n", newline="\r\n")
+
+        git = module.GitIntegration()
+        added, modified, deleted = git.get_modified_lines(str(file_path))
+
+        self.assertEqual([], sorted(added))
+        self.assertEqual([2], sorted(modified))
+        self.assertEqual([1], sorted(deleted))
 
 
 class SettingsRegressionTests(unittest.TestCase):
