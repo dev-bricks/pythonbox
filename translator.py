@@ -144,7 +144,13 @@ class TranslationSystem:
         return german_strings
 
     def _is_german(self, text: str) -> bool:
-        if any(ch in text for ch in "aeoeueAeOeUess"):
+        # Check for actual German umlauts and ligatures (single characters ä ö ü Ä Ö Ü ß)
+        # or common German umlaut ASCII substitutions as substrings (ae, oe, ue, ss)
+        german_chars = 'äöüÄÖÜß'
+        if any(ch in text for ch in german_chars):
+            return True
+        german_sequences = ['ae', 'oe', 'ue', 'ss', 'Ae', 'Oe', 'Ue']
+        if any(seq in text for seq in german_sequences):
             return True
         text_lower = text.lower()
         return any(hint in text_lower for hint in self.german_hints)

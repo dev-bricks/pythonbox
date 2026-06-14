@@ -386,9 +386,9 @@ class CodeEditor(QPlainTextEdit):
             tc.movePosition(QTextCursor.MoveOperation.StartOfWord, QTextCursor.MoveMode.KeepAnchor)
             tc.removeSelectedText()
             tc.insertText(PYTHON_SNIPPETS[completion])
-        else:
+        elif extra > 0:
             tc.insertText(completion[-extra:])
-        
+
         self.setTextCursor(tc)
 
     def text_under_cursor(self) -> str:
@@ -545,21 +545,23 @@ class CodeEditor(QPlainTextEdit):
                         mask[j] = True
                         j += 1
                     i = j
-                # Single/double quoted string
+                # Single/double quoted string (single-line only — no newline crossing)
                 elif text[i] in ('"', "'"):
                     q = text[i]
                     mask[i] = True
                     i += 1
-                    while i < n and text[i] != q:
+                    while i < n and text[i] != q and text[i] != '\n':
                         if text[i] == '\\':
                             mask[i] = True
                             i += 1  # escape char
                         if i < n:
                             mask[i] = True
                         i += 1
-                    if i < n:
+                    if i < n and text[i] == q:
                         mask[i] = True  # closing quote
-                    i += 1
+                        i += 1
+                    # If we hit a newline the string was unterminated on this line;
+                    # do NOT advance past the newline so it is handled normally.
                 else:
                     i += 1
         return mask
@@ -694,7 +696,8 @@ class CodeEditor(QPlainTextEdit):
             
             block = block.next()
             top = bottom
-            bottom = top + int(self.blockBoundingRect(block).height())
+            if block.isValid():
+                bottom = top + int(self.blockBoundingRect(block).height())
             blockNumber += 1
 
     def lineNumberAreaMousePress(self, event):
@@ -1093,7 +1096,8 @@ class FoldingArea(QWidget):
             
             block = block.next()
             top = bottom
-            bottom = top + int(self.editor.blockBoundingRect(block).height())
+            if block.isValid():
+                bottom = top + int(self.editor.blockBoundingRect(block).height())
 
     def mousePressEvent(self, event):
         """Toggle Folding beim Klick"""
@@ -1212,14 +1216,17 @@ class LinterRunner:
                 if ':' in line:
                     parts = line.split(':', 3)
                     if len(parts) >= 4:
-                        results.append({
-                            'line': int(parts[0]),
-                            'column': int(parts[1]),
-                            'code': parts[2],
-                            'message': parts[3],
-                            'severity': 'error' if parts[2].startswith('E') else 'warning'
-                        })
-        except Exception as e:
+                        try:
+                            results.append({
+                                'line': int(parts[0]),
+                                'column': int(parts[1]),
+                                'code': parts[2],
+                                'message': parts[3],
+                                'severity': 'error' if parts[2].startswith('E') else 'warning'
+                            })
+                        except (ValueError, IndexError):
+                            pass
+        except Exception:
             pass
 
         return results
@@ -1238,14 +1245,17 @@ class LinterRunner:
                 if ':' in line and not line.startswith('*'):
                     parts = line.split(':', 3)
                     if len(parts) >= 4:
-                        results.append({
-                            'line': int(parts[0]),
-                            'column': int(parts[1]),
-                            'code': parts[2],
-                            'message': parts[3],
-                            'severity': 'error' if parts[2].startswith('E') else 'warning'
-                        })
-        except Exception as e:
+                        try:
+                            results.append({
+                                'line': int(parts[0]),
+                                'column': int(parts[1]),
+                                'code': parts[2],
+                                'message': parts[3],
+                                'severity': 'error' if parts[2].startswith('E') else 'warning'
+                            })
+                        except (ValueError, IndexError):
+                            pass
+        except Exception:
             pass
 
         return results
@@ -1388,6 +1398,7 @@ class GitIntegration:
             return added, modified, deleted
         
         current_line = 0
+        in_hunk = False
         pending_deletion = False
         for line in diff.split('\n'):
             if line.startswith('@@'):
@@ -1396,6 +1407,7 @@ class GitIntegration:
                 if match:
                     current_line = int(match.group(1)) - 1
                 pending_deletion = False
+                in_hunk = True
             elif line.startswith('+') and not line.startswith('+++'):
                 current_line += 1
                 if pending_deletion:
@@ -1406,7 +1418,8 @@ class GitIntegration:
             elif line.startswith('-') and not line.startswith('---'):
                 deleted.add(current_line)
                 pending_deletion = True
-            else:
+            elif in_hunk:
+                # Only context lines (starting with ' ') inside a hunk advance the counter
                 current_line += 1
                 pending_deletion = False
         
@@ -2170,9 +2183,16 @@ class SearchReplaceBar(QFrame):
         if not self.editor:
             return
         cursor = self.editor.textCursor()
-        if cursor.hasSelection() and cursor.selectedText().lower() == self.search_input.text().lower():
-            cursor.insertText(self.replace_input.text())
-            self.on_search_changed()
+        if cursor.hasSelection():
+            selected = cursor.selectedText()
+            search = self.search_input.text()
+            if self.case_check.isChecked():
+                match = selected == search
+            else:
+                match = selected.lower() == search.lower()
+            if match:
+                cursor.insertText(self.replace_input.text())
+                self.on_search_changed()
         self.find_next()
 
     def replace_all(self):
@@ -2191,7 +2211,8 @@ class SearchReplaceBar(QFrame):
         if new_text != text:
             cursor = self.editor.textCursor()
             cursor.beginEditBlock()
-            self.editor.setPlainText(new_text)
+            cursor.select(QTextCursor.SelectionType.Document)
+            cursor.insertText(new_text)
             cursor.endEditBlock()
             self.on_search_changed()
 
@@ -2292,7 +2313,9 @@ class OutputPanel(QWidget):
     def stop_process(self):
         if self.process:
             self.process.kill()
+            self.process.waitForFinished(1000)
             self.append_output("\n⏹ Prozess abgebrochen.\n")
+            self.btn_stop.setEnabled(False)
 
     def clear_output(self):
         self.output_text.clear()
@@ -2367,26 +2390,38 @@ class MultiTabEditor(QWidget):
         tab_data = EditorTab(editor, highlighter, file_path)
         self.tabs[index] = tab_data
         
-        # Verbinde Modifikations-Signal
+        # Verbinde Modifikations-Signal — nutze editor-Identität statt Index,
+        # damit das Signal nach Tab-Reindizierung (close_tab) noch korrekt funktioniert.
         editor.document().modificationChanged.connect(
-            lambda modified, idx=index: self._on_modification_changed(idx, modified)
+            lambda modified, ed=editor: self._on_modification_changed_by_editor(ed, modified)
         )
         
         self.tab_widget.setCurrentIndex(index)
         return index
 
+    def _on_modification_changed_by_editor(self, editor: 'CodeEditor', modified: bool):
+        """Aktualisiert Tab-Titel bei Änderungen — sucht Tab per Editor-Objekt.
+
+        Robust gegen Tab-Reindizierung: Statt dem zum Erstellungszeitpunkt
+        gespeicherten Index wird das Editor-Objekt als stabile Identität genutzt.
+        """
+        for index, tab in self.tabs.items():
+            if tab.editor is editor:
+                self._on_modification_changed(index, modified)
+                return
+
     def _on_modification_changed(self, index: int, modified: bool):
         """Aktualisiert Tab-Titel bei Änderungen"""
         if index not in self.tabs:
             return
-        
+
         tab = self.tabs[index]
         tab.is_modified = modified
-        
+
         name = Path(tab.file_path).name if tab.file_path else f"Unbenannt"
         if modified:
             name = f"● {name}"
-        
+
         self.tab_widget.setTabText(index, name)
         self.fileModified.emit(name, modified)
 
@@ -2518,14 +2553,17 @@ class ImportOptimizer:
         other_lines = code.splitlines()
         import_linenos = set()
 
-        for node in ast.walk(tree):
+        # Only process TOP-LEVEL import nodes (direct children of the module body).
+        # Using ast-walk would also pick up imports inside functions/classes/if-blocks,
+        # incorrectly moving conditional or lazy imports to module level.
+        for node in tree.body:
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     name = alias.name
                     asname = f" as {alias.asname}" if alias.asname else ""
                     imports.append(f"import {name}{asname}")
                 import_linenos.update(range(node.lineno - 1, node.end_lineno))
-            
+
             elif isinstance(node, ast.ImportFrom):
                 module = node.module if node.module else ""
                 names = []
@@ -2541,14 +2579,27 @@ class ImportOptimizer:
 
         new_body = [line for i, line in enumerate(other_lines) if i not in import_linenos]
 
-        header = imports + from_imports
-        if header and new_body:
-            final_code = "\n".join(header) + "\n\n" + "\n".join(new_body)
-        elif header:
-            final_code = "\n".join(header)
-        else:
-            final_code = "\n".join(new_body)
+        # Preserve leading shebang and encoding declaration (must stay at top of file).
+        # PEP 263: encoding declaration must be in line 1 or 2.
+        # Shebang (#!) must be the very first line if present.
+        leading_lines = []
+        while new_body:
+            stripped = new_body[0].strip()
+            if stripped.startswith('#!') or re.match(r'^#.*coding[:=]', stripped):
+                leading_lines.append(new_body.pop(0))
+            else:
+                break
 
+        header = imports + from_imports
+        parts = []
+        if leading_lines:
+            parts.append("\n".join(leading_lines))
+        if header:
+            parts.append("\n".join(header))
+        if new_body:
+            parts.append("\n".join(new_body))
+
+        final_code = "\n\n".join(p for p in parts if p)
         final_code = re.sub(r'\n{3,}', '\n\n', final_code)
         return final_code, "Imports optimiert."
 
@@ -3058,9 +3109,6 @@ class PythonArchitect(QMainWindow):
         self.addDockWidget(Qt.BottomDockWidgetArea, self.linter_dock)
         self.linter_dock.hide()
 
-        # --- MINIMAP (NEU v7!) ---
-        self.minimap = None  # Wird bei Bedarf erstellt
-
         # --- STATUS BAR ---
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
@@ -3086,6 +3134,11 @@ class PythonArchitect(QMainWindow):
         """Wird aufgerufen wenn der aktive Editor wechselt"""
         if editor:
             self.search_bar.set_editor(editor)
+            # Disconnect first to avoid duplicate connections when switching back
+            try:
+                editor.cursorPositionInfo.disconnect(self.update_cursor_position)
+            except RuntimeError:
+                pass
             editor.cursorPositionInfo.connect(self.update_cursor_position)
             
             # NEU v7: Git-Status aktualisieren (nur wenn git_label existiert)
@@ -3148,6 +3201,22 @@ class PythonArchitect(QMainWindow):
             self.restoreGeometry(geometry)
 
     def closeEvent(self, event):
+        # Check for unsaved tabs before closing
+        for index, tab in list(self.tab_editor.tabs.items()):
+            if tab.is_modified:
+                name = Path(tab.file_path).name if tab.file_path else "Unbenannt"
+                result = QMessageBox.question(
+                    self, "Speichern?",
+                    f"'{name}' wurde geändert. Speichern?",
+                    QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
+                )
+                if result == QMessageBox.Cancel:
+                    event.ignore()
+                    return
+                elif result == QMessageBox.Save:
+                    if not self.tab_editor.save_tab(index):
+                        event.ignore()
+                        return
         self.settings.setValue("geometry", self.saveGeometry())
         event.accept()
 
@@ -3323,23 +3392,32 @@ class PythonArchitect(QMainWindow):
             editor = self.tab_editor.current_editor()
             if editor:
                 self._update_minimap(editor)
+        else:
+            # Minimap-Objekt freigeben damit keine unnötigen Signal-Updates mehr laufen.
+            if self.minimap:
+                self.minimap.deleteLater()
+                self.minimap = None
         self.status_bar.showMessage(f"Minimap {'aktiviert' if checked else 'deaktiviert'}", 2000)
 
     def _update_minimap(self, editor: CodeEditor):
         """Aktualisiert/Erstellt Minimap für Editor"""
         if not self.minimap_action.isChecked():
             return
-        
-        # Alte Minimap entfernen
+
+        # Alte Minimap aus Layout entfernen und freigeben
         if self.minimap:
+            layout = self.minimap_container.layout()
+            if layout:
+                layout.removeWidget(self.minimap)
             self.minimap.deleteLater()
-        
+            self.minimap = None
+
         # Neue Minimap erstellen
         layout = self.minimap_container.layout()
         if not layout:
             layout = QVBoxLayout(self.minimap_container)
             layout.setContentsMargins(0, 0, 0, 0)
-        
+
         self.minimap = Minimap(editor, self.minimap_container)
         layout.addWidget(self.minimap)
 
@@ -3821,7 +3899,13 @@ class PythonArchitect(QMainWindow):
             for url in event.mimeData().urls():
                 path = Path(url.toLocalFile())
                 if path.is_file() and path.suffix == '.py':
-                    content = path.read_text(encoding='utf-8')
+                    try:
+                        content = path.read_text(encoding='utf-8')
+                    except (UnicodeDecodeError, OSError):
+                        try:
+                            content = path.read_text(encoding='latin-1')
+                        except OSError:
+                            continue
                     self.lib_manager.save_snippet("Importiert", path.stem, content)
             self.load_library_tree()
         elif event.mimeData().hasText():
@@ -3855,7 +3939,11 @@ class PythonArchitect(QMainWindow):
         code = editor.toPlainText()
         new_code, msg = ImportOptimizer.organize_imports(code)
         if new_code:
-            editor.setPlainText(new_code)
+            cursor = editor.textCursor()
+            cursor.beginEditBlock()
+            cursor.select(QTextCursor.SelectionType.Document)
+            cursor.insertText(new_code)
+            cursor.endEditBlock()
             self.status_bar.showMessage(msg, 3000)
         else:
             QMessageBox.warning(self, "Fehler", msg)
