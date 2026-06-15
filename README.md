@@ -1,13 +1,17 @@
-# PythonBox - lightweight Python IDE for Windows
+<img src="assets/banner.svg" width="100%" alt="PythonBox — Lightweight Python IDE for Windows" />
+
+# PythonBox — Lightweight Python IDE for Windows
+
+> Focused editor with PDB debugging, code folding, linting, Git status, and VS Code/PyCharm handoff.
+
+[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
+[![PySide6](https://img.shields.io/badge/PySide6-6.5+-green.svg)](https://pypi.org/project/PySide6/)
+[![PythonBox tests](https://github.com/dev-bricks/pythonbox/actions/workflows/tests.yml/badge.svg)](https://github.com/dev-bricks/pythonbox/actions/workflows/tests.yml)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 PythonBox is a local-first Python IDE for Windows developers who want a focused editor with PySide6, PDB debugging, code folding, linting, Git status, and optional handoff to VS Code or PyCharm.
 
 PythonBox ist eine lokale Python-IDE für Windows-Entwicklerinnen und -Entwickler, die einen fokussierten Editor mit PySide6, PDB-Debugging, Code Folding, Linting, Git-Status und optionaler Übergabe an VS Code oder PyCharm suchen.
-
-![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
-![PySide6](https://img.shields.io/badge/PySide6-6.5+-green.svg)
-![PythonBox tests](https://github.com/dev-bricks/pythonbox/actions/workflows/tests.yml/badge.svg)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ## Start here
 
