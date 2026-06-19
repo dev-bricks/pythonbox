@@ -38,6 +38,7 @@ import os
 import shutil
 import json
 import ast
+import argparse
 import subprocess
 import re
 import threading
@@ -194,6 +195,69 @@ def parse_startup_file_argument(argv: Optional[List[str]] = None) -> Optional[st
             return arg
 
     return None
+
+
+def parse_cli_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
+    """Parse CLI arguments for GUI and headless modes."""
+    parser = argparse.ArgumentParser(
+        prog="PythonBox",
+        description="Python Code Architect — Editor und Linter",
+        add_help=False,
+    )
+    parser.add_argument("--open", metavar="DATEI", help="Datei im Editor öffnen")
+    parser.add_argument("--lint", metavar="DATEI", help="Datei headless linten (kein GUI)")
+    parser.add_argument("file", nargs="?", default=None, help="Datei im Editor öffnen")
+    parser.add_argument("-h", "--help", action="help", default=argparse.SUPPRESS,
+                        help="Diese Hilfe anzeigen")
+
+    args = parser.parse_args(sys.argv[1:] if argv is None else argv)
+    if args.open is None and args.file:
+        args.open = args.file
+    return args
+
+
+def run_lint_cli(file_path: str) -> int:
+    """Run linter on a file in headless mode and print results to stdout."""
+    path = Path(file_path)
+    if not path.is_file():
+        print(f"Fehler: Datei nicht gefunden: {file_path}", file=sys.stderr)
+        return 2
+
+    try:
+        code = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        try:
+            code = path.read_text(encoding="latin-1")
+        except Exception as exc:
+            print(f"Fehler: Datei nicht lesbar: {exc}", file=sys.stderr)
+            return 2
+
+    runner = LinterRunner()
+    results = runner.run_linter(code, str(path))
+
+    results.sort(key=lambda r: (r.get("line", 0), r.get("column", 0)))
+
+    errors = 0
+    warnings = 0
+    for r in results:
+        severity = r.get("severity", "warning")
+        if severity == "error":
+            errors += 1
+        else:
+            warnings += 1
+        line = r.get("line", 0)
+        col = r.get("column", 0)
+        code_id = r.get("code", "?")
+        msg = r.get("message", "").strip()
+        print(f"{path}:{line}:{col}: {code_id} {msg}")
+
+    if results:
+        print(f"\n{errors} Fehler, {warnings} Warnungen")
+        return 1
+    else:
+        print(f"{path}: Keine Findings")
+        return 0
+
 
 # ============================================================================
 # MODERN UI THEME
@@ -4068,20 +4132,25 @@ class PythonArchitect(QMainWindow):
 # ============================================================================
 
 def main(argv: Optional[List[str]] = None):
+    args = parse_cli_args(argv)
+
+    if args.lint:
+        sys.exit(run_lint_cli(args.lint))
+
     cli_args = list(sys.argv[1:] if argv is None else argv)
-    startup_file = parse_startup_file_argument(cli_args)
+    startup_file = args.open
     app = QApplication([sys.argv[0], *cli_args])
     icon_path = Path(__file__).with_name("PythonBox.ico")
     icon = QIcon(str(icon_path)) if icon_path.exists() else QIcon()
     if not icon.isNull():
         app.setWindowIcon(icon)
     set_dark_theme(app)
-    
+
     window = PythonArchitect(startup_file=startup_file)
     if not icon.isNull():
         window.setWindowIcon(icon)
     window.show()
-    
+
     sys.exit(app.exec())
 
 

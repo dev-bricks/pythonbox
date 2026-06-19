@@ -10,6 +10,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - EXE neu gebaut 2026-06-01 (PyInstaller `--onefile`, `PythonBox.exe`); 14/14 Tests grün, Smoke-Test bestanden. Vorherige EXE: 2026-04-29.
 
 ### Hinzugefügt / Added
+- CLI-Lint-Modus: `python PythonBox_v8.py --lint <datei>` führt headless Linting durch (flake8 → pylint → AST-Fallback) und gibt Ergebnisse auf stdout aus. Exit-Codes: 0 = sauber, 1 = Findings, 2 = Fehler. Kein GUI-Start. Nützlich für CI, Automationen und LLM-Agenten.
+- `tests/test_cli_lint.py` mit 5 Tests für den CLI-Lint-Modus.
+- CLI-Parsing mit `argparse` (`parse_cli_args()`), rückwärtskompatibel zu `--open` und nackten Dateipfaden.
 - `llms.txt` mit kanonischem Repo-Kontext, Zielgruppe, Suchphrasen und Abgrenzung zu Devbox/Python-Box/Pybricks.
 - README-Starttabelle und GitHub-Actions-Badge für schnellere Nutzerführung.
 - App- und Fenstericon über `PythonBox.ico`.
