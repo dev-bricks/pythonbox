@@ -4,11 +4,12 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch, MagicMock
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "PythonBox_v8.py"
 sys.path.insert(0, str(ROOT))
-from PythonBox_v8 import parse_cli_args
+from PythonBox_v8 import parse_cli_args, LinterRunner
 
 
 def run_lint(target: str, timeout: int = 30) -> subprocess.CompletedProcess:
@@ -126,6 +127,48 @@ class TestParseCLIArgs(unittest.TestCase):
                     self.assertRegex(line, r".+:\d+:\d+: \S+ .+")
         finally:
             os.unlink(path)
+
+
+class TestLinterDetection(unittest.TestCase):
+
+    @patch("shutil.which", return_value=None)
+    @patch("subprocess.run")
+    def test_missing_flake8_not_detected(self, mock_run, mock_which):
+        mock_result = MagicMock()
+        mock_result.returncode = 1
+        mock_run.return_value = mock_result
+        runner = LinterRunner.__new__(LinterRunner)
+        runner.has_flake8 = False
+        runner.has_pylint = False
+        runner._check_available_linters()
+        self.assertFalse(runner.has_flake8)
+        self.assertFalse(getattr(runner, '_flake8_via_module', False))
+
+    @patch("shutil.which", return_value=None)
+    @patch("subprocess.run")
+    def test_missing_pylint_not_detected(self, mock_run, mock_which):
+        mock_result = MagicMock()
+        mock_result.returncode = 1
+        mock_run.return_value = mock_result
+        runner = LinterRunner.__new__(LinterRunner)
+        runner.has_flake8 = False
+        runner.has_pylint = False
+        runner._check_available_linters()
+        self.assertFalse(runner.has_pylint)
+        self.assertFalse(getattr(runner, '_pylint_via_module', False))
+
+    @patch("shutil.which", return_value=None)
+    @patch("subprocess.run")
+    def test_module_flake8_detected_on_success(self, mock_run, mock_which):
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_run.return_value = mock_result
+        runner = LinterRunner.__new__(LinterRunner)
+        runner.has_flake8 = False
+        runner.has_pylint = False
+        runner._check_available_linters()
+        self.assertTrue(runner.has_flake8)
+        self.assertTrue(runner._flake8_via_module)
 
 
 if __name__ == "__main__":

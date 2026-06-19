@@ -1238,26 +1238,26 @@ class LinterRunner:
         """Prüft welche Linter verfügbar sind"""
         self.has_pylint = shutil.which("pylint") is not None
         self.has_flake8 = shutil.which("flake8") is not None
+        self._flake8_via_module = False
         if not self.has_flake8:
             try:
-                subprocess.run([sys.executable, "-m", "flake8", "--version"],
-                               capture_output=True, timeout=5)
-                self.has_flake8 = True
-                self._flake8_via_module = True
+                proc = subprocess.run([sys.executable, "-m", "flake8", "--version"],
+                                      capture_output=True, timeout=5)
+                if proc.returncode == 0:
+                    self.has_flake8 = True
+                    self._flake8_via_module = True
             except Exception:
-                self._flake8_via_module = False
-        else:
-            self._flake8_via_module = False
+                pass
+        self._pylint_via_module = False
         if not self.has_pylint:
             try:
-                subprocess.run([sys.executable, "-m", "pylint", "--version"],
-                               capture_output=True, timeout=5)
-                self.has_pylint = True
-                self._pylint_via_module = True
+                proc = subprocess.run([sys.executable, "-m", "pylint", "--version"],
+                                      capture_output=True, timeout=5)
+                if proc.returncode == 0:
+                    self.has_pylint = True
+                    self._pylint_via_module = True
             except Exception:
-                self._pylint_via_module = False
-        else:
-            self._pylint_via_module = False
+                pass
 
     def run_linter(self, code: str, file_path: Optional[str] = None) -> List[Dict]:
         """Führt Linter aus und gibt Ergebnisse zurück"""
