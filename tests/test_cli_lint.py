@@ -7,6 +7,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "PythonBox_v8.py"
+sys.path.insert(0, str(ROOT))
+from PythonBox_v8 import parse_cli_args
 
 
 def run_lint(target: str, timeout: int = 30) -> subprocess.CompletedProcess:
@@ -76,6 +78,52 @@ class TestCLILint(unittest.TestCase):
             result = run_lint(path)
             self.assertNotIn("QApplication", result.stderr)
             self.assertNotIn("Traceback", result.stderr)
+        finally:
+            os.unlink(path)
+
+
+class TestParseCLIArgs(unittest.TestCase):
+
+    def test_open_flag(self):
+        args = parse_cli_args(["--open", "test.py"])
+        self.assertEqual(args.open, "test.py")
+        self.assertIsNone(args.lint)
+
+    def test_lint_flag(self):
+        args = parse_cli_args(["--lint", "test.py"])
+        self.assertEqual(args.lint, "test.py")
+        self.assertIsNone(args.open)
+
+    def test_positional_file(self):
+        args = parse_cli_args(["test.py"])
+        self.assertEqual(args.open, "test.py")
+        self.assertIsNone(args.lint)
+
+    def test_no_args(self):
+        args = parse_cli_args([])
+        self.assertIsNone(args.open)
+        self.assertIsNone(args.lint)
+
+    def test_unknown_args_preserved(self):
+        args = parse_cli_args(["--open", "test.py", "-style", "fusion"])
+        self.assertEqual(args.open, "test.py")
+        self.assertIn("-style", args._remaining)
+
+    def test_lint_with_real_flake8(self):
+        with tempfile.NamedTemporaryFile(suffix=".py", mode="w",
+                                         encoding="utf-8", delete=False) as f:
+            f.write("import os\nimport os\n")
+            f.flush()
+            path = f.name
+        try:
+            result = run_lint(path)
+            if result.returncode == 1:
+                lines = result.stdout.strip().split("\n")
+                finding_lines = [l for l in lines if path in l]
+                self.assertTrue(len(finding_lines) > 0,
+                                "flake8 should find duplicate import")
+                for line in finding_lines:
+                    self.assertRegex(line, r".+:\d+:\d+: \S+ .+")
         finally:
             os.unlink(path)
 

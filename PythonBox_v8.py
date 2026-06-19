@@ -210,9 +210,10 @@ def parse_cli_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument("-h", "--help", action="help", default=argparse.SUPPRESS,
                         help="Diese Hilfe anzeigen")
 
-    args = parser.parse_args(sys.argv[1:] if argv is None else argv)
+    args, remaining = parser.parse_known_args(sys.argv[1:] if argv is None else argv)
     if args.open is None and args.file:
         args.open = args.file
+    args._remaining = remaining
     return args
 
 
@@ -1237,6 +1238,26 @@ class LinterRunner:
         """Prüft welche Linter verfügbar sind"""
         self.has_pylint = shutil.which("pylint") is not None
         self.has_flake8 = shutil.which("flake8") is not None
+        if not self.has_flake8:
+            try:
+                subprocess.run([sys.executable, "-m", "flake8", "--version"],
+                               capture_output=True, timeout=5)
+                self.has_flake8 = True
+                self._flake8_via_module = True
+            except Exception:
+                self._flake8_via_module = False
+        else:
+            self._flake8_via_module = False
+        if not self.has_pylint:
+            try:
+                subprocess.run([sys.executable, "-m", "pylint", "--version"],
+                               capture_output=True, timeout=5)
+                self.has_pylint = True
+                self._pylint_via_module = True
+            except Exception:
+                self._pylint_via_module = False
+        else:
+            self._pylint_via_module = False
 
     def run_linter(self, code: str, file_path: Optional[str] = None) -> List[Dict]:
         """Führt Linter aus und gibt Ergebnisse zurück"""
@@ -1271,8 +1292,10 @@ class LinterRunner:
         """Führt Flake8 aus"""
         results = []
         try:
+            cmd = ([sys.executable, "-m", "flake8"] if getattr(self, '_flake8_via_module', False)
+                   else ["flake8"])
             proc = subprocess.run(
-                ["flake8", "--format=%(row)d:%(col)d:%(code)s:%(text)s", file_path],
+                [*cmd, "--format=%(row)d:%(col)d:%(code)s:%(text)s", file_path],
                 capture_output=True, text=True, timeout=10
             )
 
@@ -1299,8 +1322,10 @@ class LinterRunner:
         """Führt Pylint aus"""
         results = []
         try:
+            cmd = ([sys.executable, "-m", "pylint"] if getattr(self, '_pylint_via_module', False)
+                   else ["pylint"])
             proc = subprocess.run(
-                ["pylint", "--output-format=text", "--msg-template={line}:{column}:{msg_id}:{msg}",
+                [*cmd, "--output-format=text", "--msg-template={line}:{column}:{msg_id}:{msg}",
                  file_path],
                 capture_output=True, text=True, timeout=30
             )
@@ -4137,9 +4162,8 @@ def main(argv: Optional[List[str]] = None):
     if args.lint:
         sys.exit(run_lint_cli(args.lint))
 
-    cli_args = list(sys.argv[1:] if argv is None else argv)
     startup_file = args.open
-    app = QApplication([sys.argv[0], *cli_args])
+    app = QApplication([sys.argv[0]] + args._remaining)
     icon_path = Path(__file__).with_name("PythonBox.ico")
     icon = QIcon(str(icon_path)) if icon_path.exists() else QIcon()
     if not icon.isNull():
