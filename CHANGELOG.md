@@ -12,7 +12,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ### Hinzugefügt / Added
 - CLI-Lint-Modus: `python PythonBox_v8.py --lint <datei>` führt headless Linting durch (flake8 → pylint → AST-Fallback) und gibt Ergebnisse auf stdout aus. Exit-Codes: 0 = sauber, 1 = Findings, 2 = Fehler. Kein GUI-Start. Nützlich für CI, Automationen und LLM-Agenten.
 - `tests/test_cli_lint.py` mit 5 Tests für den CLI-Lint-Modus.
-- CLI-Parsing mit `argparse` (`parse_cli_args()`), rückwärtskompatibel zu `--open` und nackten Dateipfaden.
+- CLI-Parsing mit `argparse` (`parse_cli_args()` + `parse_known_args`), rückwärtskompatibel zu `--open` und nackten Dateipfaden. Unbekannte Qt-Flags (z. B. `-style fusion`) werden durchgereicht statt abzubrechen.
+- Linter-Erkennung: `python -m flake8` / `python -m pylint` als Fallback wenn `shutil.which()` fehlschlägt (typisch auf Windows/Git Bash). Erkennung gated auf `returncode == 0`.
+- 3 Unit-Tests für Linter-Detection-Logik (Mock-basiert: fehlender Linter, erfolgreicher Modul-Fallback).
 - `llms.txt` mit kanonischem Repo-Kontext, Zielgruppe, Suchphrasen und Abgrenzung zu Devbox/Python-Box/Pybricks.
 - README-Starttabelle und GitHub-Actions-Badge für schnellere Nutzerführung.
 - App- und Fenstericon über `PythonBox.ico`.
