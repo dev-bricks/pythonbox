@@ -70,8 +70,11 @@ class TranslationSystem:
 
     def _save_translations(self):
         self.translations_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.translations_file, 'w', encoding='utf-8') as f:
+        # BUG-U4: atomar (tmp + Path.replace) — kein Datenverlust bei Absturz mid-write
+        tmp = self.translations_file.with_suffix(self.translations_file.suffix + ".tmp")
+        with open(tmp, 'w', encoding='utf-8') as f:
             json.dump(self.translations, f, indent=2, ensure_ascii=False)
+        tmp.replace(self.translations_file)
 
     def t(self, key: str) -> str:
         """
