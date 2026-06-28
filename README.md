@@ -86,6 +86,14 @@ Optional kann direkt beim Start eine Datei geöffnet werden:
 ```bash
 python PythonBox_v8.py --open demo.py
 python PythonBox_v8.py demo.py
+python PythonBox_v8.py --theme dracula --open demo.py
+```
+
+Headless ist außerdem ein schlanker Run-Modus für lokale Automationen vorhanden:
+
+```bash
+python PythonBox_v8.py --run demo.py
+python PythonBox_v8.py --run demo.py --flag wert
 ```
 
 Weitere Headless-CLI-Befehle oder eine REST-API sind aktuell nicht Teil des Projekts.

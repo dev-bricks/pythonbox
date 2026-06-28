@@ -80,6 +80,55 @@ class PythonArchitectRegressionTests(unittest.TestCase):
             window.deleteLater()
             app.processEvents()
 
+    def test_toolbar_buttons_expose_accessible_context(self):
+        os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+        module = load_pythonbox_module()
+        app = module.QApplication.instance() or module.QApplication([])
+        window = module.PythonArchitect()
+
+        try:
+            toolbar = window.findChild(module.QToolBar, "main_toolbar")
+            self.assertIsNotNone(toolbar)
+
+            buttons = {}
+            for action in toolbar.actions():
+                button = toolbar.widgetForAction(action)
+                if button is None or not button.accessibleName():
+                    continue
+                buttons[button.accessibleName()] = button
+
+            expected = {
+                "Neue Datei": "Tastenkürzel Ctrl+N.",
+                "Datei öffnen": "Tastenkürzel Ctrl+O.",
+                "Datei speichern": "Tastenkürzel Ctrl+S.",
+                "Suchen": "Tastenkürzel Ctrl+F.",
+                "Skript ausführen": "Tastenkürzel F5.",
+                "Debugger starten": "Tastenkürzel F6.",
+                "Breakpoint umschalten": "Tastenkürzel F9.",
+                "Linter ausführen": "Tastenkürzel Ctrl+L.",
+            }
+
+            for accessible_name, shortcut_hint in expected.items():
+                with self.subTest(accessible_name=accessible_name):
+                    button = buttons.get(accessible_name)
+                    self.assertIsNotNone(button)
+                    self.assertIn(shortcut_hint, button.accessibleDescription())
+                    self.assertTrue(button.toolTip())
+        finally:
+            window.close()
+            window.deleteLater()
+            app.processEvents()
+
+    def test_apply_theme_normalizes_and_tracks_theme_name(self):
+        os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+        module = load_pythonbox_module()
+        app = module.QApplication.instance() or module.QApplication([])
+
+        applied = module.apply_theme(app, "dracula")
+
+        self.assertEqual("Dracula", applied)
+        self.assertEqual("Dracula", app.property("pythonbox_theme"))
+
 
 class ExternalPythonCommandTests(unittest.TestCase):
     def test_windows_external_commands_use_current_interpreter(self):

@@ -20,6 +20,14 @@ def run_lint(target: str, timeout: int = 30) -> subprocess.CompletedProcess:
     )
 
 
+def run_headless(arguments, timeout: int = 30) -> subprocess.CompletedProcess:
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
+    return subprocess.run(
+        [sys.executable, str(SCRIPT), *arguments],
+        capture_output=True, text=True, timeout=timeout, env=env,
+    )
+
+
 class TestCLILint(unittest.TestCase):
 
     def test_lint_clean_file(self):
@@ -104,10 +112,27 @@ class TestParseCLIArgs(unittest.TestCase):
         args = parse_cli_args([])
         self.assertIsNone(args.open)
         self.assertIsNone(args.lint)
+        self.assertIsNone(args.run)
+        self.assertIsNone(args.theme)
 
     def test_unknown_args_preserved(self):
         args = parse_cli_args(["--open", "test.py", "-style", "fusion"])
         self.assertEqual(args.open, "test.py")
+        self.assertIn("-style", args._remaining)
+
+    def test_run_flag(self):
+        args = parse_cli_args(["--run", "tool.py"])
+        self.assertEqual(args.run, "tool.py")
+        self.assertIsNone(args.open)
+        self.assertIsNone(args.lint)
+
+    def test_theme_flag_is_normalized(self):
+        args = parse_cli_args(["--theme", "light"])
+        self.assertEqual(args.theme, "Light")
+
+    def test_theme_flag_preserves_qt_args(self):
+        args = parse_cli_args(["--theme", "dracula", "-style", "fusion"])
+        self.assertEqual(args.theme, "Dracula")
         self.assertIn("-style", args._remaining)
 
     def test_lint_with_real_flake8(self):
@@ -169,6 +194,36 @@ class TestLinterDetection(unittest.TestCase):
         runner._check_available_linters()
         self.assertTrue(runner.has_flake8)
         self.assertTrue(runner._flake8_via_module)
+
+
+class TestHeadlessRun(unittest.TestCase):
+
+    def test_run_executes_script_and_returns_exit_code(self):
+        with tempfile.NamedTemporaryFile(suffix=".py", mode="w",
+                                         encoding="utf-8", delete=False) as f:
+            f.write("import sys\nprint('run-ok')\nsys.exit(3)\n")
+            f.flush()
+            path = f.name
+        try:
+            result = run_headless(["--run", path])
+            self.assertEqual(result.returncode, 3)
+            self.assertIn("run-ok", result.stdout)
+            self.assertNotIn("QApplication", result.stderr)
+        finally:
+            os.unlink(path)
+
+    def test_run_forwards_extra_arguments(self):
+        with tempfile.NamedTemporaryFile(suffix=".py", mode="w",
+                                         encoding="utf-8", delete=False) as f:
+            f.write("import sys\nprint('|'.join(sys.argv[1:]))\n")
+            f.flush()
+            path = f.name
+        try:
+            result = run_headless(["--run", path, "eins", "zwei"])
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("eins|zwei", result.stdout)
+        finally:
+            os.unlink(path)
 
 
 if __name__ == "__main__":

@@ -86,13 +86,20 @@ def build_external_python_command(script_path: Path) -> List[str]:
 
 SNIPPET_EXPORT_SCHEMA = "pythonbox-snippets-v1"
 SETTINGS_EXPORT_SCHEMA = "pythonbox-settings-v1"
+DEFAULT_THEME = "Dark (Standard)"
+AVAILABLE_THEMES = (
+    DEFAULT_THEME,
+    "Light",
+    "Monokai",
+    "Dracula",
+)
 PORTABLE_SETTINGS_FIELDS = (
     ("font_size", int, 10),
     ("tab_size", int, 4),
     ("word_wrap", bool, False),
     ("autocomplete", bool, True),
     ("bracket_matching", bool, True),
-    ("theme", str, "Dark (Standard)"),
+    ("theme", str, DEFAULT_THEME),
     ("show_minimap", bool, False),
     ("line_numbers", bool, True),
 )
@@ -142,7 +149,10 @@ def build_settings_export_payload(settings: QSettings) -> dict:
 def write_settings_export(settings: QSettings, path: Path) -> None:
     payload = build_settings_export_payload(settings)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    # BUG-U4: atomar (tmp + os.replace) — kein Datenverlust bei Absturz mid-write
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp, path)
 
 
 def import_settings_payload(settings: QSettings, payload: dict) -> dict:
@@ -167,7 +177,10 @@ def import_settings_payload(settings: QSettings, payload: dict) -> dict:
 
 
 def import_settings_from_json(settings: QSettings, path: Path) -> dict:
-    payload = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Ungültige JSON-Settings-Datei '{path.name}': {e}") from e
     return import_settings_payload(settings, payload)
 
 
@@ -206,11 +219,22 @@ def parse_cli_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     )
     parser.add_argument("--open", metavar="DATEI", help="Datei im Editor öffnen")
     parser.add_argument("--lint", metavar="DATEI", help="Datei headless linten (kein GUI)")
+    parser.add_argument("--run", metavar="DATEI", help="Datei headless mit aktuellem Interpreter ausführen (kein GUI)")
+    parser.add_argument(
+        "--theme",
+        metavar="THEME",
+        type=normalize_theme_name,
+        choices=AVAILABLE_THEMES,
+        help="Theme für den GUI-Start überschreiben: dark, light, monokai oder dracula",
+    )
     parser.add_argument("file", nargs="?", default=None, help="Datei im Editor öffnen")
     parser.add_argument("-h", "--help", action="help", default=argparse.SUPPRESS,
                         help="Diese Hilfe anzeigen")
 
     args, remaining = parser.parse_known_args(sys.argv[1:] if argv is None else argv)
+    if (args.lint or args.run) and args.file:
+        remaining = [args.file, *remaining]
+        args.file = None
     if args.open is None and args.file:
         args.open = args.file
     args._remaining = remaining
@@ -260,63 +284,174 @@ def run_lint_cli(file_path: str) -> int:
         return 0
 
 
+def run_script_cli(file_path: str, extra_args: Optional[List[str]] = None) -> int:
+    """Run a Python script headless with the current interpreter."""
+    path = Path(file_path)
+    if not path.is_file():
+        print(f"Fehler: Datei nicht gefunden: {file_path}", file=sys.stderr)
+        return 2
+
+    cmd = [sys.executable, str(path)]
+    if extra_args:
+        cmd.extend(extra_args)
+
+    try:
+        completed = subprocess.run(cmd, check=False)
+    except OSError as exc:
+        print(f"Fehler: Datei konnte nicht ausgeführt werden: {exc}", file=sys.stderr)
+        return 2
+    return completed.returncode
+
+
 # ============================================================================
 # MODERN UI THEME
 # ============================================================================
 
-def set_dark_theme(app):
+def normalize_theme_name(theme_name: Optional[str]) -> str:
+    """Return a canonical theme name from a loose CLI or settings value."""
+    if theme_name is None:
+        return DEFAULT_THEME
+
+    normalized = str(theme_name).strip().lower()
+    aliases = {
+        "dark": DEFAULT_THEME,
+        "dark (standard)": DEFAULT_THEME,
+        "standard": DEFAULT_THEME,
+        "light": "Light",
+        "monokai": "Monokai",
+        "dracula": "Dracula",
+    }
+    return aliases.get(normalized, str(theme_name))
+
+
+def apply_theme(app: QApplication, theme_name: Optional[str]) -> str:
+    """Apply one of the supported application themes."""
+    theme = normalize_theme_name(theme_name)
+    accent = {
+        DEFAULT_THEME: QColor(42, 130, 218),
+        "Monokai": QColor(249, 38, 114),
+        "Dracula": QColor(189, 147, 249),
+    }
+
     app.setStyle("Fusion")
-    dark_palette = QPalette()
-    dark_color = QColor(40, 40, 40)
-    
-    dark_palette.setColor(QPalette.ColorRole.Window, dark_color)
-    dark_palette.setColor(QPalette.ColorRole.WindowText, Qt.white)
-    dark_palette.setColor(QPalette.ColorRole.Base, QColor(30, 30, 30))
-    dark_palette.setColor(QPalette.AlternateBase, dark_color)
-    dark_palette.setColor(QPalette.ToolTipBase, Qt.white)
-    dark_palette.setColor(QPalette.ToolTipText, Qt.white)
-    dark_palette.setColor(QPalette.ColorRole.Text, Qt.white)
-    dark_palette.setColor(QPalette.Button, QColor(53, 53, 53))
-    dark_palette.setColor(QPalette.ButtonText, Qt.white)
-    dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
-    dark_palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
-    dark_palette.setColor(QPalette.ColorRole.HighlightedText, Qt.black)
-    
-    app.setPalette(dark_palette)
-    app.setStyleSheet("""
-        QTreeWidget { background-color: #252525; border: 1px solid #444; color: #ddd; }
-        QHeaderView::section { background-color: #353535; border: 1px solid #444; }
-        QPlainTextEdit { background-color: #1e1e1e; color: #d4d4d4; font-family: Consolas, monospace; }
-        QPushButton { 
-            background-color: #3a3a3a; border: 1px solid #555; 
-            padding: 6px 12px; border-radius: 4px; color: white;
+    palette = QPalette()
+
+    if theme == "Light":
+        palette.setColor(QPalette.ColorRole.Window, QColor(245, 245, 245))
+        palette.setColor(QPalette.ColorRole.WindowText, QColor(30, 30, 30))
+        palette.setColor(QPalette.ColorRole.Base, QColor(255, 255, 255))
+        palette.setColor(QPalette.ColorRole.AlternateBase, QColor(235, 235, 235))
+        palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(255, 255, 255))
+        palette.setColor(QPalette.ColorRole.ToolTipText, QColor(30, 30, 30))
+        palette.setColor(QPalette.ColorRole.Text, QColor(30, 30, 30))
+        palette.setColor(QPalette.ColorRole.Button, QColor(235, 235, 235))
+        palette.setColor(QPalette.ColorRole.ButtonText, QColor(30, 30, 30))
+        palette.setColor(QPalette.ColorRole.Link, QColor(0, 102, 204))
+        palette.setColor(QPalette.ColorRole.Highlight, QColor(0, 102, 204))
+        palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.white)
+        stylesheet = """
+        QTreeWidget { background-color: #ffffff; border: 1px solid #c7c7c7; color: #222; }
+        QHeaderView::section { background-color: #efefef; border: 1px solid #d2d2d2; color: #222; }
+        QPlainTextEdit { background-color: #ffffff; color: #1f1f1f; font-family: Consolas, monospace; }
+        QPushButton {
+            background-color: #efefef; border: 1px solid #c7c7c7;
+            padding: 6px 12px; border-radius: 4px; color: #222;
         }
-        QPushButton:hover { background-color: #4a4a4a; border-color: #2a82da; }
-        QPushButton:pressed { background-color: #2a82da; }
-        QPushButton:disabled { background-color: #2a2a2a; color: #666; }
-        QSplitter::handle { background-color: #444; width: 2px; }
-        QMenuBar { background-color: #353535; color: white; }
-        QMenuBar::item:selected { background-color: #2a82da; }
-        QMenu { background-color: #353535; color: white; border: 1px solid #555; }
-        QMenu::item:selected { background-color: #2a82da; }
-        QTabWidget::pane { border: 1px solid #444; background: #1e1e1e; }
-        QTabBar::tab { 
-            background: #353535; color: #aaa; padding: 8px 16px; 
-            border: 1px solid #444; border-bottom: none; margin-right: 2px;
+        QPushButton:hover { background-color: #e6e6e6; border-color: #0066cc; }
+        QPushButton:pressed { background-color: #d9ebff; }
+        QPushButton:disabled { background-color: #f6f6f6; color: #999; }
+        QSplitter::handle { background-color: #d2d2d2; width: 2px; }
+        QMenuBar { background-color: #efefef; color: #222; }
+        QMenuBar::item:selected { background-color: #d9ebff; }
+        QMenu { background-color: #ffffff; color: #222; border: 1px solid #c7c7c7; }
+        QMenu::item:selected { background-color: #d9ebff; }
+        QTabWidget::pane { border: 1px solid #c7c7c7; background: #ffffff; }
+        QTabBar::tab {
+            background: #efefef; color: #555; padding: 8px 16px;
+            border: 1px solid #c7c7c7; border-bottom: none; margin-right: 2px;
         }
-        QTabBar::tab:selected { background: #1e1e1e; color: white; border-bottom: 1px solid #1e1e1e; }
-        QTabBar::tab:hover { background: #4a4a4a; }
-        QLineEdit { 
-            background: #2a2a2a; border: 1px solid #555; color: white; 
+        QTabBar::tab:selected { background: #ffffff; color: #111; border-bottom: 1px solid #ffffff; }
+        QTabBar::tab:hover { background: #f7f7f7; }
+        QLineEdit {
+            background: #ffffff; border: 1px solid #c7c7c7; color: #111;
             padding: 4px 8px; border-radius: 3px;
         }
-        QLineEdit:focus { border-color: #2a82da; }
-        QToolBar { background: #353535; border: none; spacing: 3px; padding: 3px; }
-        QToolBar QToolButton { background: transparent; border: none; padding: 4px; }
-        QToolBar QToolButton:hover { background: #4a4a4a; border-radius: 3px; }
-        QDockWidget { color: white; }
-        QDockWidget::title { background: #353535; padding: 6px; }
-    """)
+        QLineEdit:focus { border-color: #0066cc; }
+        QToolBar { background: #efefef; border: none; spacing: 3px; padding: 3px; }
+        QToolBar QToolButton { background: transparent; border: none; padding: 4px; color: #222; }
+        QToolBar QToolButton:hover { background: #e6e6e6; border-radius: 3px; }
+        QDockWidget { color: #222; }
+        QDockWidget::title { background: #efefef; padding: 6px; color: #222; }
+        """
+    else:
+        accent_color = accent.get(theme, accent[DEFAULT_THEME])
+        dark_color = QColor(40, 40, 40)
+        button_color = QColor(53, 53, 53)
+        base_color = QColor(30, 30, 30)
+        if theme == "Monokai":
+            dark_color = QColor(39, 40, 34)
+            button_color = QColor(58, 60, 50)
+            base_color = QColor(27, 28, 22)
+        elif theme == "Dracula":
+            dark_color = QColor(40, 42, 54)
+            button_color = QColor(68, 71, 90)
+            base_color = QColor(30, 31, 41)
+
+        palette.setColor(QPalette.ColorRole.Window, dark_color)
+        palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.white)
+        palette.setColor(QPalette.ColorRole.Base, base_color)
+        palette.setColor(QPalette.ColorRole.AlternateBase, dark_color)
+        palette.setColor(QPalette.ColorRole.ToolTipBase, Qt.GlobalColor.white)
+        palette.setColor(QPalette.ColorRole.ToolTipText, Qt.GlobalColor.white)
+        palette.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.white)
+        palette.setColor(QPalette.ColorRole.Button, button_color)
+        palette.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.white)
+        palette.setColor(QPalette.ColorRole.Link, accent_color)
+        palette.setColor(QPalette.ColorRole.Highlight, accent_color)
+        palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.black)
+        stylesheet = f"""
+        QTreeWidget {{ background-color: {base_color.name()}; border: 1px solid #444; color: #ddd; }}
+        QHeaderView::section {{ background-color: {button_color.name()}; border: 1px solid #444; }}
+        QPlainTextEdit {{ background-color: {base_color.name()}; color: #d4d4d4; font-family: Consolas, monospace; }}
+        QPushButton {{
+            background-color: {button_color.name()}; border: 1px solid #555;
+            padding: 6px 12px; border-radius: 4px; color: white;
+        }}
+        QPushButton:hover {{ background-color: #4a4a4a; border-color: {accent_color.name()}; }}
+        QPushButton:pressed {{ background-color: {accent_color.name()}; }}
+        QPushButton:disabled {{ background-color: #2a2a2a; color: #666; }}
+        QSplitter::handle {{ background-color: #444; width: 2px; }}
+        QMenuBar {{ background-color: {button_color.name()}; color: white; }}
+        QMenuBar::item:selected {{ background-color: {accent_color.name()}; }}
+        QMenu {{ background-color: {button_color.name()}; color: white; border: 1px solid #555; }}
+        QMenu::item:selected {{ background-color: {accent_color.name()}; }}
+        QTabWidget::pane {{ border: 1px solid #444; background: {base_color.name()}; }}
+        QTabBar::tab {{
+            background: {button_color.name()}; color: #aaa; padding: 8px 16px;
+            border: 1px solid #444; border-bottom: none; margin-right: 2px;
+        }}
+        QTabBar::tab:selected {{ background: {base_color.name()}; color: white; border-bottom: 1px solid {base_color.name()}; }}
+        QTabBar::tab:hover {{ background: #4a4a4a; }}
+        QLineEdit {{
+            background: #2a2a2a; border: 1px solid #555; color: white;
+            padding: 4px 8px; border-radius: 3px;
+        }}
+        QLineEdit:focus {{ border-color: {accent_color.name()}; }}
+        QToolBar {{ background: {button_color.name()}; border: none; spacing: 3px; padding: 3px; }}
+        QToolBar QToolButton {{ background: transparent; border: none; padding: 4px; }}
+        QToolBar QToolButton:hover {{ background: #4a4a4a; border-radius: 3px; }}
+        QDockWidget {{ color: white; }}
+        QDockWidget::title {{ background: {button_color.name()}; padding: 6px; }}
+        """
+
+    app.setPalette(palette)
+    app.setStyleSheet(stylesheet)
+    app.setProperty("pythonbox_theme", theme)
+    return theme
+
+
+def set_dark_theme(app):
+    return apply_theme(app, DEFAULT_THEME)
 
 # ============================================================================
 # EDITOR KOMPONENTEN
@@ -723,14 +858,14 @@ class CodeEditor(QPlainTextEdit):
                 # Breakpoint-Markierung (NEU v8) - roter Kreis
                 if line_num in self.breakpoints:
                     painter.setBrush(QColor(200, 50, 50))
-                    painter.setPen(Qt.NoPen)
+                    painter.setPen(Qt.PenStyle.NoPen)
                     circle_size = min(12, self.fontMetrics().height() - 2)
                     painter.drawEllipse(2, top + 2, circle_size, circle_size)
                 
                 # Aktuelle Debug-Zeile (NEU v8) - gelber Pfeil
                 if line_num == self.current_debug_line:
                     painter.setBrush(QColor(255, 255, 0))
-                    painter.setPen(Qt.NoPen)
+                    painter.setPen(Qt.PenStyle.NoPen)
                     # Pfeil zeichnen
                     arrow_y = top + self.fontMetrics().height() // 2
                     painter.drawPolygon([
@@ -757,7 +892,7 @@ class CodeEditor(QPlainTextEdit):
                     painter.setPen(QColor(100, 100, 100))
                 
                 painter.drawText(18, top, self.lineNumberArea.width() - 22, 
-                               self.fontMetrics().height(), Qt.AlignRight, number)
+                               self.fontMetrics().height(), Qt.AlignmentFlag.AlignRight, number)
             
             block = block.next()
             top = bottom
@@ -980,7 +1115,7 @@ class Minimap(QPlainTextEdit):
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setTextInteractionFlags(Qt.NoTextInteraction)
-        self.setCursor(Qt.PointingHandCursor)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
 
         # Sehr kleine Schrift für Minimap
         font = QFont("Consolas", 1)
@@ -1093,7 +1228,7 @@ class FoldingArea(QWidget):
         self.foldable_blocks = {}   # {block_number: end_block_number}
 
         self.setFixedWidth(14)
-        self.setCursor(Qt.PointingHandCursor)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
 
         # Debounce-Timer für textChanged (verhindert Update bei jedem Tastendruck)
         self._fold_timer = QTimer()
@@ -1157,7 +1292,7 @@ class FoldingArea(QWidget):
                 painter.setPen(QColor(150, 150, 150))
                 painter.drawText(0, top, self.width(), 
                                self.editor.fontMetrics().height(),
-                               Qt.AlignCenter, symbol)
+                               Qt.AlignmentFlag.AlignCenter, symbol)
             
             block = block.next()
             top = bottom
@@ -1239,6 +1374,13 @@ class LinterRunner:
         self.has_pylint = shutil.which("pylint") is not None
         self.has_flake8 = shutil.which("flake8") is not None
         self._flake8_via_module = False
+        self._pylint_via_module = False
+        # WICHTIG: In einer gefrorenen PyInstaller-EXE ist sys.executable die App
+        # SELBST. [sys.executable, "-m", "flake8"] wuerde PythonBox rekursiv neu
+        # starten -> Fork-Bombe (tausende Prozesse). Daher die Modul-Checks NUR im
+        # echten Python-Interpreter ausführen, nie in der gefrorenen EXE.
+        if getattr(sys, "frozen", False):
+            return
         if not self.has_flake8:
             try:
                 proc = subprocess.run([sys.executable, "-m", "flake8", "--version"],
@@ -1248,7 +1390,6 @@ class LinterRunner:
                     self._flake8_via_module = True
             except Exception:
                 pass
-        self._pylint_via_module = False
         if not self.has_pylint:
             try:
                 proc = subprocess.run([sys.executable, "-m", "pylint", "--version"],
@@ -2054,8 +2195,8 @@ class SettingsDialog(QDialog):
         
         # Theme
         self.theme_combo = QComboBox()
-        self.theme_combo.addItems(["Dark (Standard)", "Light", "Monokai", "Dracula"])
-        current_theme = self.settings.value("theme", "Dark (Standard)")
+        self.theme_combo.addItems(list(AVAILABLE_THEMES))
+        current_theme = self.settings.value("theme", DEFAULT_THEME)
         self.theme_combo.setCurrentText(current_theme)
         display_layout.addRow("Theme:", self.theme_combo)
         
@@ -2087,7 +2228,7 @@ class SettingsDialog(QDialog):
         self.settings.setValue("word_wrap", self.word_wrap_check.isChecked())
         self.settings.setValue("autocomplete", self.autocomplete_check.isChecked())
         self.settings.setValue("bracket_matching", self.bracket_check.isChecked())
-        self.settings.setValue("theme", self.theme_combo.currentText())
+        self.settings.setValue("theme", normalize_theme_name(self.theme_combo.currentText()))
         self.settings.setValue("show_minimap", self.minimap_check.isChecked())
         self.settings.setValue("line_numbers", self.line_numbers_check.isChecked())
         self.settings.sync()
@@ -2526,12 +2667,12 @@ class MultiTabEditor(QWidget):
             result = QMessageBox.question(
                 self, "Speichern?",
                 f"'{name}' wurde geändert. Speichern?",
-                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
+                QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel
             )
-            
-            if result == QMessageBox.Cancel:
+
+            if result == QMessageBox.StandardButton.Cancel:
                 return
-            elif result == QMessageBox.Save:
+            elif result == QMessageBox.StandardButton.Save:
                 if not self.save_tab(index):
                     return
         
@@ -2714,15 +2855,18 @@ class LibraryManager:
     def _load_locks(self):
         if self.lock_file.exists():
             try:
-                with open(self.lock_file, 'r') as f:
+                with open(self.lock_file, 'r', encoding='utf-8') as f:
                     return set(json.load(f))
             except (OSError, json.JSONDecodeError):
                 return set()
         return set()
 
     def _save_locks(self):
-        with open(self.lock_file, 'w') as f:
+        # BUG-U4: atomar (tmp + os.replace) — kein Datenverlust bei Absturz mid-write
+        tmp = str(self.lock_file) + ".tmp"
+        with open(tmp, 'w', encoding='utf-8') as f:
             json.dump(list(self.locked_items), f)
+        os.replace(tmp, self.lock_file)
 
     def is_locked(self, topic, name):
         return f"{topic}/{name}" in self.locked_items
@@ -2869,7 +3013,10 @@ class LibraryManager:
         }
 
     def import_from_json(self, path: Path) -> dict:
-        payload = json.loads(path.read_text(encoding='utf-8'))
+        try:
+            payload = json.loads(path.read_text(encoding='utf-8'))
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Ungültige JSON-Exportdatei '{path.name}': {e}") from e
         return self.import_payload(payload)
 
 
@@ -3051,35 +3198,48 @@ class PythonArchitect(QMainWindow):
 
         # --- TOOLBAR ---
         toolbar = QToolBar("Hauptwerkzeugleiste")
+        toolbar.setObjectName("main_toolbar")
         toolbar.setIconSize(QSize(20, 20))
         self.addToolBar(toolbar)
-        
-        toolbar.addAction("📄", self.new_file).setToolTip("Neue Datei (Ctrl+N)")
-        toolbar.addAction("📂", self.open_file).setToolTip("Öffnen (Ctrl+O)")
-        toolbar.addAction("💾", self.save_file).setToolTip("Speichern (Ctrl+S)")
+
+        def add_toolbar_action(symbol: str, callback, tooltip: str, accessible_name: str, accessible_description: str):
+            action = toolbar.addAction(symbol, callback)
+            action.setToolTip(tooltip)
+            action.setStatusTip(tooltip)
+            action.setWhatsThis(accessible_description)
+            button = toolbar.widgetForAction(action)
+            if button is not None:
+                button.setAccessibleName(accessible_name)
+                button.setAccessibleDescription(accessible_description)
+                button.setToolTip(tooltip)
+            return action
+
+        add_toolbar_action("📄", self.new_file, "Neue Datei (Ctrl+N)", "Neue Datei", "Legt eine neue Datei im Editor an. Tastenkürzel Ctrl+N.")
+        add_toolbar_action("📂", self.open_file, "Öffnen (Ctrl+O)", "Datei öffnen", "Öffnet eine vorhandene Datei im Editor. Tastenkürzel Ctrl+O.")
+        add_toolbar_action("💾", self.save_file, "Speichern (Ctrl+S)", "Datei speichern", "Speichert die aktuelle Datei. Tastenkürzel Ctrl+S.")
         toolbar.addSeparator()
-        toolbar.addAction("↩️", self.undo_action).setToolTip("Rückgängig (Ctrl+Z)")
-        toolbar.addAction("↪️", self.redo_action).setToolTip("Wiederholen (Ctrl+Y)")
+        add_toolbar_action("↩️", self.undo_action, "Rückgängig (Ctrl+Z)", "Rückgängig", "Macht die letzte Änderung rückgängig. Tastenkürzel Ctrl+Z.")
+        add_toolbar_action("↪️", self.redo_action, "Wiederholen (Ctrl+Y)", "Wiederholen", "Stellt die zuletzt rückgängig gemachte Änderung wieder her. Tastenkürzel Ctrl+Y.")
         toolbar.addSeparator()
-        toolbar.addAction("🔍", self.show_search).setToolTip("Suchen (Ctrl+F)")
+        add_toolbar_action("🔍", self.show_search, "Suchen (Ctrl+F)", "Suchen", "Öffnet die Suche im aktuellen Editor. Tastenkürzel Ctrl+F.")
         toolbar.addSeparator()
-        toolbar.addAction("▶️", self.run_script).setToolTip("Ausführen (F5)")
-        toolbar.addAction("🐛", self.run_with_debugger).setToolTip("Mit Debugger (F6)")
-        toolbar.addAction("🔴", self.toggle_breakpoint_action).setToolTip("Breakpoint (F9)")
+        add_toolbar_action("▶️", self.run_script, "Ausführen (F5)", "Skript ausführen", "Führt das aktuelle Skript im integrierten Ausgabebereich aus. Tastenkürzel F5.")
+        add_toolbar_action("🐛", self.run_with_debugger, "Mit Debugger (F6)", "Debugger starten", "Startet das aktuelle Skript mit dem Debugger. Tastenkürzel F6.")
+        add_toolbar_action("🔴", self.toggle_breakpoint_action, "Breakpoint (F9)", "Breakpoint umschalten", "Setzt oder entfernt einen Breakpoint in der aktuellen Zeile. Tastenkürzel F9.")
         toolbar.addSeparator()
-        toolbar.addAction("⚠️", self.run_linter_now).setToolTip("Linter (Ctrl+L)")
+        add_toolbar_action("⚠️", self.run_linter_now, "Linter (Ctrl+L)", "Linter ausführen", "Prüft die aktuelle Datei mit dem Linter. Tastenkürzel Ctrl+L.")
         toolbar.addSeparator()
         
         # VS Code Button (nur wenn verfügbar)
         if self.ide_integration.has_vscode():
-            toolbar.addAction("🔷", self.open_in_vscode).setToolTip("In VS Code öffnen")
+            add_toolbar_action("🔷", self.open_in_vscode, "In VS Code öffnen", "In VS Code öffnen", "Öffnet die aktuelle Datei oder das Projekt in VS Code.")
 
         # --- CENTRAL WIDGET ---
         central = QWidget()
         self.setCentralWidget(central)
         layout = QHBoxLayout(central)
         
-        splitter = QSplitter(Qt.Horizontal)
+        splitter = QSplitter(Qt.Orientation.Horizontal)
         
         # --- LEFT: LIBRARY ---
         left_widget = QWidget()
@@ -3098,7 +3258,7 @@ class PythonArchitect(QMainWindow):
         self.tree.dropEvent = self.tree_drop
         self.tree.itemClicked.connect(self.on_tree_select)
         self.tree.itemDoubleClicked.connect(self.on_tree_double_click)
-        self.tree.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.tree.customContextMenuRequested.connect(self.open_tree_context)
         l_layout.addWidget(self.tree)
         
@@ -3297,12 +3457,12 @@ class PythonArchitect(QMainWindow):
                 result = QMessageBox.question(
                     self, "Speichern?",
                     f"'{name}' wurde geändert. Speichern?",
-                    QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
+                    QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel
                 )
-                if result == QMessageBox.Cancel:
+                if result == QMessageBox.StandardButton.Cancel:
                     event.ignore()
                     return
-                elif result == QMessageBox.Save:
+                elif result == QMessageBox.StandardButton.Save:
                     if not self.tab_editor.save_tab(index):
                         event.ignore()
                         return
@@ -3419,6 +3579,9 @@ class PythonArchitect(QMainWindow):
         word_wrap = self.settings.value("word_wrap", False, type=bool)
         autocomplete = self.settings.value("autocomplete", True, type=bool)
         bracket_matching = self.settings.value("bracket_matching", True, type=bool)
+        app = QApplication.instance()
+        if app is not None:
+            apply_theme(app, self.settings.value("theme", DEFAULT_THEME, type=str))
         
         # Alle Editoren aktualisieren
         for tab in self.tab_editor.tabs.values():
@@ -3548,7 +3711,7 @@ class PythonArchitect(QMainWindow):
             item_text = f"{icon} Zeile {line}:{col} [{code_str}] {msg}"
             
             item = QListWidgetItem(item_text)
-            item.setData(Qt.UserRole, error)
+            item.setData(Qt.ItemDataRole.UserRole, error)
             
             if severity == 'error':
                 item.setForeground(QColor(255, 100, 100))
@@ -3583,7 +3746,7 @@ class PythonArchitect(QMainWindow):
 
     def goto_linter_error(self, item: QListWidgetItem):
         """Springt zur Fehlerstelle"""
-        error = item.data(Qt.UserRole)
+        error = item.data(Qt.ItemDataRole.UserRole)
         if not error:
             return
         
@@ -3848,11 +4011,11 @@ class PythonArchitect(QMainWindow):
                 is_locked = self.lib_manager.is_locked(topic, snippet)
                 prefix = "🔒 " if is_locked else ""
                 child.setText(0, f"{prefix}{snippet}")
-                child.setData(0, Qt.UserRole, {"topic": topic, "name": snippet, "locked": is_locked})
+                child.setData(0, Qt.ItemDataRole.UserRole, {"topic": topic, "name": snippet, "locked": is_locked})
                 child.setIcon(0, self.style().standardIcon(QStyle.SP_FileIcon))
 
     def on_tree_select(self, item, col):
-        data = item.data(0, Qt.UserRole)
+        data = item.data(0, Qt.ItemDataRole.UserRole)
         if data:
             content = self.lib_manager.get_content(data['topic'], data['name'])
             self.lbl_preview.setText(f"Vorschau: {data['name']}")
@@ -3863,18 +4026,18 @@ class PythonArchitect(QMainWindow):
 
     def on_tree_double_click(self, item, col):
         """Doppelklick fügt Snippet direkt ein"""
-        data = item.data(0, Qt.UserRole)
+        data = item.data(0, Qt.ItemDataRole.UserRole)
         if data:
             self.insert_snippet()
 
     def open_tree_context(self, position):
         item = self.tree.itemAt(position)
-        menu = QMenu()
-        
+        menu = QMenu(self)
+
         menu.addAction("➕ Neuer Eintrag...", self.new_library_item)
         
-        if item and item.data(0, Qt.UserRole):
-            data = item.data(0, Qt.UserRole)
+        if item and item.data(0, Qt.ItemDataRole.UserRole):
+            data = item.data(0, Qt.ItemDataRole.UserRole)
             is_locked = data['locked']
             
             menu.addSeparator()
@@ -3907,7 +4070,7 @@ class PythonArchitect(QMainWindow):
                     QMessageBox.warning(self, "Fehler", msg)
 
     def edit_library_item(self, item):
-        data = item.data(0, Qt.UserRole)
+        data = item.data(0, Qt.ItemDataRole.UserRole)
         content = self.lib_manager.get_content(data['topic'], data['name'])
         topics = self.lib_manager.get_topics()
         
@@ -3924,13 +4087,13 @@ class PythonArchitect(QMainWindow):
             self.load_library_tree()
 
     def delete_library_item(self, item):
-        data = item.data(0, Qt.UserRole)
-        if QMessageBox.question(self, "Löschen", f"{data['name']} wirklich löschen?") == QMessageBox.Yes:
+        data = item.data(0, Qt.ItemDataRole.UserRole)
+        if QMessageBox.question(self, "Löschen", f"{data['name']} wirklich löschen?") == QMessageBox.StandardButton.Yes:
             if self.lib_manager.delete_item(data['topic'], data['name']):
                 self.load_library_tree()
 
     def toggle_lock_item(self, item):
-        data = item.data(0, Qt.UserRole)
+        data = item.data(0, Qt.ItemDataRole.UserRole)
         self.lib_manager.toggle_lock(data['topic'], data['name'])
         self.load_library_tree()
 
@@ -4112,7 +4275,8 @@ class PythonArchitect(QMainWindow):
         
         self.status_bar.showMessage("Erstelle EXE...", 0)
         try:
-            subprocess.run(cmd, check=True)
+            # BUG-D4: timeout= ergänzt — PyInstaller kann sehr lange dauern; 300 s Mindestschutz
+            subprocess.run(cmd, check=True, timeout=300)
             QMessageBox.information(self, "Fertig", f"EXE erstellt in:\n{dist_dir}")
         except subprocess.CalledProcessError as e:
             QMessageBox.critical(self, "Build Fehler", str(e))
@@ -4157,10 +4321,18 @@ class PythonArchitect(QMainWindow):
 # ============================================================================
 
 def main(argv: Optional[List[str]] = None):
+    # Schutzriegel: Eine gefrorene EXE darf nie als Modul-Runner missbraucht werden.
+    # Falls PythonBox.exe faelschlich mit "-m <modul>" aufgerufen wird, sofort
+    # beenden statt die GUI zu starten (verhindert versehentlichen Selbst-Spawn).
+    _raw = sys.argv[1:] if argv is None else list(argv)
+    if "-m" in _raw:
+        return
     args = parse_cli_args(argv)
 
     if args.lint:
         sys.exit(run_lint_cli(args.lint))
+    if args.run:
+        sys.exit(run_script_cli(args.run, extra_args=args._remaining))
 
     startup_file = args.open
     app = QApplication([sys.argv[0]] + args._remaining)
@@ -4168,7 +4340,8 @@ def main(argv: Optional[List[str]] = None):
     icon = QIcon(str(icon_path)) if icon_path.exists() else QIcon()
     if not icon.isNull():
         app.setWindowIcon(icon)
-    set_dark_theme(app)
+    settings = QSettings("PythonArchitect", "v8")
+    apply_theme(app, args.theme or settings.value("theme", DEFAULT_THEME, type=str))
 
     window = PythonArchitect(startup_file=startup_file)
     if not icon.isNull():
