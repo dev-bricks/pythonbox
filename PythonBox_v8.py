@@ -2274,36 +2274,64 @@ class SearchReplaceBar(QFrame):
         # Suchen-Zeile
         search_row = QHBoxLayout()
         search_row.addWidget(QLabel("🔍"))
-        
+
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Suchen... (Ctrl+F)")
+        self.search_input.setAccessibleName("Suchbegriff")
+        self.search_input.setAccessibleDescription(
+            "Gibt den Suchbegriff für den aktuellen Editor ein. Eingabetaste springt zum nächsten Treffer."
+        )
+        self.search_input.setToolTip("Suchbegriff eingeben und mit Eingabetaste zum nächsten Treffer springen")
         self.search_input.textChanged.connect(self.on_search_changed)
         self.search_input.returnPressed.connect(self.find_next)
         search_row.addWidget(self.search_input, 1)
-        
+
         self.match_label = QLabel("0/0")
         self.match_label.setMinimumWidth(60)
+        self.match_label.setAccessibleName("Trefferzähler")
+        self.match_label.setAccessibleDescription(
+            "Zeigt die aktuelle Trefferposition und die Gesamtzahl der Suchtreffer an."
+        )
         search_row.addWidget(self.match_label)
-        
+
         self.btn_prev = QPushButton("◀")
         self.btn_prev.setFixedWidth(30)
+        self.btn_prev.setToolTip("Vorherigen Treffer auswählen (Shift+Enter)")
+        self.btn_prev.setAccessibleName("Vorheriger Treffer")
+        self.btn_prev.setAccessibleDescription(
+            "Springt zum vorherigen Suchtreffer im aktuellen Editor. Tastaturpfad Shift+Enter."
+        )
         self.btn_prev.clicked.connect(self.find_prev)
         search_row.addWidget(self.btn_prev)
-        
+
         self.btn_next = QPushButton("▶")
         self.btn_next.setFixedWidth(30)
+        self.btn_next.setToolTip("Nächsten Treffer auswählen (Enter)")
+        self.btn_next.setAccessibleName("Nächster Treffer")
+        self.btn_next.setAccessibleDescription(
+            "Springt zum nächsten Suchtreffer im aktuellen Editor. Tastaturpfad Enter."
+        )
         self.btn_next.clicked.connect(self.find_next)
         search_row.addWidget(self.btn_next)
-        
+
         self.case_check = QCheckBox("Aa")
         self.case_check.setToolTip("Groß-/Kleinschreibung beachten")
+        self.case_check.setAccessibleName("Groß- und Kleinschreibung beachten")
+        self.case_check.setAccessibleDescription(
+            "Aktiviert oder deaktiviert die Suche mit Beachtung von Groß- und Kleinschreibung."
+        )
         self.case_check.stateChanged.connect(self.on_search_changed)
         search_row.addWidget(self.case_check)
-        
-        btn_close = QPushButton("✕")
-        btn_close.setFixedWidth(30)
-        btn_close.clicked.connect(self.hide)
-        search_row.addWidget(btn_close)
+
+        self.btn_close = QPushButton("✕")
+        self.btn_close.setFixedWidth(30)
+        self.btn_close.setToolTip("Suchleiste schließen (Esc)")
+        self.btn_close.setAccessibleName("Suchleiste schließen")
+        self.btn_close.setAccessibleDescription(
+            "Blendet die Suchleiste aus. Tastaturpfad Escape."
+        )
+        self.btn_close.clicked.connect(self.hide)
+        search_row.addWidget(self.btn_close)
         
         layout.addLayout(search_row)
         
@@ -2313,16 +2341,31 @@ class SearchReplaceBar(QFrame):
         replace_layout.setContentsMargins(0, 0, 0, 0)
         
         replace_layout.addWidget(QLabel("↔️"))
-        
+
         self.replace_input = QLineEdit()
         self.replace_input.setPlaceholderText("Ersetzen durch...")
+        self.replace_input.setAccessibleName("Ersetzen durch")
+        self.replace_input.setAccessibleDescription(
+            "Gibt den Text ein, der den aktuellen Suchtreffer oder alle Suchtreffer ersetzt."
+        )
+        self.replace_input.setToolTip("Ersetzungstext für den aktuellen Suchbegriff eingeben")
         replace_layout.addWidget(self.replace_input, 1)
-        
+
         self.btn_replace = QPushButton("Ersetzen")
+        self.btn_replace.setToolTip("Aktuellen Treffer ersetzen")
+        self.btn_replace.setAccessibleName("Aktuellen Treffer ersetzen")
+        self.btn_replace.setAccessibleDescription(
+            "Ersetzt den aktuell ausgewählten Suchtreffer durch den eingegebenen Text."
+        )
         self.btn_replace.clicked.connect(self.replace_current)
         replace_layout.addWidget(self.btn_replace)
-        
+
         self.btn_replace_all = QPushButton("Alle")
+        self.btn_replace_all.setToolTip("Alle Treffer ersetzen")
+        self.btn_replace_all.setAccessibleName("Alle Treffer ersetzen")
+        self.btn_replace_all.setAccessibleDescription(
+            "Ersetzt alle Suchtreffer im aktuellen Editor durch den eingegebenen Text."
+        )
         self.btn_replace_all.clicked.connect(self.replace_all)
         replace_layout.addWidget(self.btn_replace_all)
         

@@ -119,6 +119,43 @@ class PythonArchitectRegressionTests(unittest.TestCase):
             window.deleteLater()
             app.processEvents()
 
+    def test_search_bar_compact_controls_expose_accessible_context(self):
+        os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+        module = load_pythonbox_module()
+        app = module.QApplication.instance() or module.QApplication([])
+        window = module.PythonArchitect()
+
+        try:
+            search_bar = window.search_bar
+            self.assertEqual("Suchbegriff", search_bar.search_input.accessibleName())
+            self.assertIn("Eingabetaste", search_bar.search_input.accessibleDescription())
+            self.assertTrue(search_bar.search_input.toolTip())
+
+            expected_buttons = {
+                "Vorheriger Treffer": ("Shift+Enter", search_bar.btn_prev),
+                "Nächster Treffer": ("Enter", search_bar.btn_next),
+                "Suchleiste schließen": ("Escape", search_bar.btn_close),
+                "Aktuellen Treffer ersetzen": ("Ersetzt den aktuell ausgewählten Suchtreffer", search_bar.btn_replace),
+                "Alle Treffer ersetzen": ("Ersetzt alle Suchtreffer", search_bar.btn_replace_all),
+            }
+
+            for accessible_name, (description_hint, widget) in expected_buttons.items():
+                with self.subTest(accessible_name=accessible_name):
+                    self.assertEqual(accessible_name, widget.accessibleName())
+                    self.assertIn(description_hint, widget.accessibleDescription())
+                    self.assertTrue(widget.toolTip())
+
+            self.assertEqual("Groß- und Kleinschreibung beachten", search_bar.case_check.accessibleName())
+            self.assertIn("Groß- und Kleinschreibung", search_bar.case_check.accessibleDescription())
+            self.assertEqual("Trefferzähler", search_bar.match_label.accessibleName())
+            self.assertIn("Gesamtzahl", search_bar.match_label.accessibleDescription())
+            self.assertEqual("Ersetzen durch", search_bar.replace_input.accessibleName())
+            self.assertIn("alle Suchtreffer ersetzt", search_bar.replace_input.accessibleDescription())
+        finally:
+            window.close()
+            window.deleteLater()
+            app.processEvents()
+
     def test_apply_theme_normalizes_and_tracks_theme_name(self):
         os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
         module = load_pythonbox_module()
