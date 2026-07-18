@@ -1,6 +1,6 @@
 # Portierungsplan - PythonBox v8
 
-Stand: 2026-05-28
+Stand: 2026-07-19
 
 ## Bedingungsprüfung
 
@@ -11,6 +11,46 @@ Ein zentraler Portierungsplan war nicht vorhanden. Es gab nur Hinweise in README
 PythonBox bleibt eine Desktop-App. Sinnvoll sind Windows als Hauptplattform sowie macOS und Linux als Source-Smoke-Ziele aus derselben PySide6-Codebasis. Android, iOS und Web/PWA sind keine aktuellen Ziele, weil die wichtigsten Usecases lokale Dateien, lokale Python-Interpreter, Git, Linter, Debugger und externe Editor-Brücken brauchen.
 
 Ein Companion ist ebenfalls kein sinnvoller nächster Schritt. Der Nutzen der App liegt im direkten Bearbeiten und Ausführen lokaler Python-Dateien; ein mobiler oder browserbasierter Begleiter würde nur einen kleinen Ausschnitt abdecken und die eigentliche IDE-Erfahrung nicht verbessern.
+
+## Automations- und Schnittstellen-Gate (2026-07-19)
+
+**Entscheidung: No-Go für eine REST- oder JSON-RPC-Schnittstelle im aktuellen
+Produktscope.** Die vorhandene lokale Prozess-CLI deckt die belegten
+Automationsfälle ab. Ein dauerhaft laufender Server würde Authentisierung,
+Pfad- und Prozessfreigaben sowie einen zusätzlichen Lebenszyklus benötigen,
+ohne dass dafür ein Produktbedarf belegt ist.
+
+| Oberfläche | Ist-Stand | Grenze |
+|---|---|---|
+| `--open <datei>`, `--open=<datei>`, `<datei>` | implementiert; GUI öffnet die Datei beim Start | lokaler Dateipfad, Nutzerprozess |
+| `--theme <theme>` | implementiert; Theme-Override für den GUI-Start | kein Headless-Theme-Dienst |
+| `--lint <datei>` | implementiert; headless, stdout, Exitcodes 0/1/2 | eine lokale Datei, kein Server |
+| `--run <datei> [argumente]` | implementiert; aktueller Interpreter, Exitcode des Kindprozesses | explizit gestartete lokale Datei; optionartige Argumente nach `--` |
+| unbekannte Qt-Argumenttokens | im GUI-Modus an `QApplication` weitergereicht | werttragende Optionen als ein Token, z. B. `-style=fusion` |
+| REST/JSON-RPC/OpenAPI/Agentensteuerung | nicht implementiert und nicht behauptet | bewusstes Nicht-Ziel |
+
+Eine Neubewertung braucht einen konkreten, dokumentierten Usecase, den die
+Prozess-CLI nicht erfüllt, sowie eine eigene Produkt- und Security-Freigabe.
+Erst ein positives Folge-Gate darf loopback-only Binding, standardmäßig
+aktivierte Authentisierung, Operations-Allowlist, erlaubte Pfadwurzeln,
+Prozess-/Timeout-Grenzen, Logging ohne Secrets und Start-/Stop-Lebenszyklus
+planen. Dieses Gate erzeugt keinen Server- oder Schema-Code.
+
+## Windows-Store-Nachfrage-Gate (2026-07-19)
+
+**Entscheidung: No-Go; zurückgestellt.** Der aktuelle Readback zeigt im
+öffentlichen Repository 0 Issues insgesamt und damit keinen Store-, MSIX-,
+Signierungs- oder Ein-Klick-Installationswunsch. Die kanonische
+`WINDOWS_STORE_PIPELINE.md` führt PythonBox weiterhin als GitHub-only, und es
+liegt kein separater Nutzerbeleg für Store-Nachfrage vor. Aus diesem Gate wird
+kein Store-Artefakt erzeugt.
+
+Eine Neubewertung wird erst durch eine konkrete externe Anfrage mit benanntem
+Installationsnutzen ausgelöst. Dann ist ein eigener Folgeplan für Packaging,
+Store-Identität, Zertifikat/Signierung, MSIX, WACK, Support- und
+Datenschutzmaterialien sowie die weiterhin geltende GitHub-Release-Linie
+erforderlich; Partner-Center-Upload und Veröffentlichung bleiben außerhalb
+dieses Gates.
 
 ## Features der besten ausgebauten Version
 
@@ -54,7 +94,7 @@ Eine mobile Kurzansicht wäre ein anderes Setting, erfüllt aber nur einen Randn
 | Web/PWA | Nicht-Ziel | Browser kann lokale Interpreter, PDB, Git und externe Editor-Brücken nicht gleichwertig bedienen. |
 | Android | Nicht-Ziel | Der Kernnutzen ist Desktop-Entwicklung; mobiles Debugging lokaler Python-Dateien ist kein realistischer Hauptusecase. |
 | iOS | Nicht-Ziel | Gleiche Einschränkung wie Android, zusätzlich eingeschränkter Dateisystem- und Prozesszugriff. |
-| Windows Store | Nicht aktiv | Der Store bleibt wegen Nischenposition und VS-Code-Konkurrenz kein aktueller Kanal. GitHub bleibt der kanonische Release-Ort. |
+| Windows Store | No-Go / zurückgestellt | Readback 2026-07-19: 0 Repository-Issues und kein externer Nachfragebeleg; die Pipeline führt PythonBox weiter als GitHub-only. Neubewertung nur nach konkreter Nachfrage. |
 
 ## Austausch und Datenhaltung
 
@@ -91,7 +131,7 @@ Empfohlene Austauschwege:
 
 - Windows-GitHub-Release als Hauptartefakt beibehalten.
 - macOS/Linux erst nach bestandenen Smokes als direkte GitHub-Artefakte prüfen.
-- Windows Store nur neu bewerten, wenn es konkrete Nachfrage nach signierter Ein-Klick-Installation gibt.
+- [x] Windows-Store-Nachfrage-Gate am 2026-07-19 geprüft: 0 Repository-Issues, kein externer Nachfragebeleg, daher No-Go/zurückgestellt und kein Store-Artefakt erzeugt. Nur nach konkreter Nachfrage mit eigenem Packaging-/Identitäts-/Zertifikats-/WACK-/Support-/Datenschutz-Folgeplan neu öffnen.
 
 ## Nicht-Ziele
 

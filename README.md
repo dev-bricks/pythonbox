@@ -81,22 +81,41 @@ python PythonBox_v8.py
 
 Unter Windows kann alternativ `START_PythonBox_v8.bat` per Doppelklick gestartet werden.
 
-Optional kann direkt beim Start eine Datei geöffnet werden:
+### Kommandozeile / Command line
+
+Alle Befehle laufen lokal. All commands run locally.
+
+| Modus / Mode | Aufruf / Command | Verhalten / Behavior |
+|---|---|---|
+| GUI-Dateiöffnung / GUI file open | `python PythonBox_v8.py --open demo.py` | Öffnet die Datei beim GUI-Start. / Opens the file when the GUI starts. |
+| GUI-Dateiöffnung / GUI file open | `python PythonBox_v8.py --open=demo.py` oder / or `python PythonBox_v8.py demo.py` | Gleichwertige Kurzformen. / Equivalent shorthand forms. |
+| GUI-Theme | `python PythonBox_v8.py --theme dracula --open demo.py` | Überschreibt das Theme für diesen GUI-Start; akzeptiert `dark`, `light`, `monokai` und `dracula`. / Overrides the theme for this GUI start. |
+| Headless-Lint | `python PythonBox_v8.py --lint demo.py` | Schreibt Findings nach stdout, startet keine GUI und liefert Exitcode 0 (sauber), 1 (Findings) oder 2 (Datei-/Lesefehler). / Writes findings to stdout, starts no GUI, and returns exit code 0, 1, or 2. |
+| Headless-Run | `python PythonBox_v8.py --run demo.py eins zwei` | Startet die Datei mit dem aktuellen Python-Interpreter, reicht Positionsargumente weiter und liefert den Exitcode des Kindprozesses; 2 steht auch für einen Start-/Dateifehler. / Runs the file with the current interpreter, forwards positional arguments, and returns the child exit code; 2 also denotes a launch/file error. |
+
+Optionartige Scriptargumente werden nach `--` zuverlässig weitergereicht:
+Use `--` before option-like script arguments:
 
 ```bash
-python PythonBox_v8.py --open demo.py
-python PythonBox_v8.py demo.py
-python PythonBox_v8.py --theme dracula --open demo.py
+python PythonBox_v8.py --run demo.py -- --flag wert
 ```
 
-Headless ist außerdem ein schlanker Run-Modus für lokale Automationen vorhanden:
+Im GUI-Modus reicht PythonBox unbekannte Qt-Argumenttokens über
+`parse_known_args` an `QApplication` weiter. Für Optionen mit Wert ist die
+Ein-Token-Form wie `-style=fusion` der dokumentierte, verlustfreie Aufruf;
+`-style fusion` ist kein zugesicherter Vertrag.
 
-```bash
-python PythonBox_v8.py --run demo.py
-python PythonBox_v8.py --run demo.py --flag wert
-```
+In GUI mode, unknown Qt argument tokens are passed from `parse_known_args` to
+`QApplication`. For value-bearing options, use a single token such as
+`-style=fusion`; the split form `-style fusion` is not a guaranteed contract.
 
-Weitere Headless-CLI-Befehle oder eine REST-API sind aktuell nicht Teil des Projekts.
+PythonBox stellt keine REST-, JSON-RPC-, OpenAPI- oder Agenten-Schnittstelle
+bereit. Die lokale Prozess-CLI ist die einzige Automationsoberfläche; eine
+Server-Schnittstelle ist im aktuellen Produktscope ein bewusstes Nicht-Ziel.
+
+PythonBox does not expose REST, JSON-RPC, OpenAPI, or agent-control endpoints.
+The local process CLI is the only automation surface; a server interface is an
+explicit non-goal for the current product scope.
 
 ### Windows-EXE bauen / Build Windows EXE
 
