@@ -156,6 +156,39 @@ class PythonArchitectRegressionTests(unittest.TestCase):
             window.deleteLater()
             app.processEvents()
 
+    def test_debug_panel_controls_expose_accessible_context(self):
+        os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+        module = load_pythonbox_module()
+        app = module.QApplication.instance() or module.QApplication([])
+        panel = module.DebugOutputPanel()
+
+        try:
+            expected_buttons = {
+                "Fortsetzen": ("pdb-Befehl c", panel.btn_continue),
+                "Nächste Zeile": ("pdb-Befehl n", panel.btn_step),
+                "Hineinspringen": ("pdb-Befehl s", panel.btn_step_into),
+                "Herausspringen": ("pdb-Befehl r", panel.btn_step_out),
+                "Debugging stoppen": ("Beendet den laufenden Debug- oder Ausführungsprozess", panel.btn_stop),
+            }
+
+            for accessible_name, (description_hint, button) in expected_buttons.items():
+                with self.subTest(accessible_name=accessible_name):
+                    self.assertEqual(accessible_name, button.accessibleName())
+                    self.assertIn(description_hint, button.accessibleDescription())
+                    self.assertTrue(button.toolTip())
+                    self.assertTrue(button.text())
+
+            self.assertEqual("Debugger-Ausgabe", panel.output.accessibleName())
+            self.assertIn("pdb-Ausgaben", panel.output.accessibleDescription())
+            self.assertEqual("pdb-Eingabeaufforderung", panel.lbl_prompt.accessibleName())
+            self.assertEqual("pdb-Befehl", panel.input_line.accessibleName())
+            self.assertIn("Pfeil hoch", panel.input_line.accessibleDescription())
+            self.assertIn("nächste Zeile", panel.input_line.placeholderText())
+        finally:
+            panel.close()
+            panel.deleteLater()
+            app.processEvents()
+
     def test_apply_theme_normalizes_and_tracks_theme_name(self):
         os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
         module = load_pythonbox_module()

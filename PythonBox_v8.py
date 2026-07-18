@@ -1861,31 +1861,56 @@ class DebugOutputPanel(QWidget):
         # Debug Toolbar
         self.debug_toolbar = QHBoxLayout()
         
-        self.btn_continue = QPushButton("▶️ Continue (c)")
+        self.btn_continue = QPushButton("▶️ Fortsetzen")
         self.btn_continue.clicked.connect(lambda: self.send_command("c"))
-        self.btn_continue.setEnabled(False)
+        self._configure_debug_button(
+            self.btn_continue,
+            "Fortsetzen",
+            "Debugger fortsetzen (c)",
+            "Setzt die Debug-Ausführung bis zum nächsten Breakpoint oder Programmende fort. pdb-Befehl c.",
+        )
         self.debug_toolbar.addWidget(self.btn_continue)
         
-        self.btn_step = QPushButton("⏭️ Step (n)")
+        self.btn_step = QPushButton("⏭️ Nächste Zeile")
         self.btn_step.clicked.connect(lambda: self.send_command("n"))
-        self.btn_step.setEnabled(False)
+        self._configure_debug_button(
+            self.btn_step,
+            "Nächste Zeile",
+            "Eine Zeile ausführen (n)",
+            "Führt die nächste Zeile aus, ohne in Funktionsaufrufe hineinzuspringen. pdb-Befehl n.",
+        )
         self.debug_toolbar.addWidget(self.btn_step)
         
-        self.btn_step_into = QPushButton("⬇️ Step Into (s)")
+        self.btn_step_into = QPushButton("⬇️ Hineinspringen")
         self.btn_step_into.clicked.connect(lambda: self.send_command("s"))
-        self.btn_step_into.setEnabled(False)
+        self._configure_debug_button(
+            self.btn_step_into,
+            "Hineinspringen",
+            "In Funktion springen (s)",
+            "Springt beim nächsten Schritt in einen Funktionsaufruf hinein. pdb-Befehl s.",
+        )
         self.debug_toolbar.addWidget(self.btn_step_into)
         
-        self.btn_step_out = QPushButton("⬆️ Step Out (r)")
+        self.btn_step_out = QPushButton("⬆️ Herausspringen")
         self.btn_step_out.clicked.connect(lambda: self.send_command("r"))
-        self.btn_step_out.setEnabled(False)
+        self._configure_debug_button(
+            self.btn_step_out,
+            "Herausspringen",
+            "Aus Funktion zurückkehren (r)",
+            "Läuft bis zur Rückkehr aus der aktuellen Funktion weiter. pdb-Befehl r.",
+        )
         self.debug_toolbar.addWidget(self.btn_step_out)
         
         self.debug_toolbar.addStretch()
         
-        self.btn_stop = QPushButton("⏹️ Stop")
+        self.btn_stop = QPushButton("⏹️ Stoppen")
         self.btn_stop.clicked.connect(self.stop_process)
-        self.btn_stop.setEnabled(False)
+        self._configure_debug_button(
+            self.btn_stop,
+            "Debugging stoppen",
+            "Debugger stoppen",
+            "Beendet den laufenden Debug- oder Ausführungsprozess.",
+        )
         self.debug_toolbar.addWidget(self.btn_stop)
         
         layout.addLayout(self.debug_toolbar)
@@ -1894,6 +1919,10 @@ class DebugOutputPanel(QWidget):
         self.output = QPlainTextEdit()
         self.output.setReadOnly(True)
         self.output.setFont(QFont("Consolas", 9))
+        self.output.setAccessibleName("Debugger-Ausgabe")
+        self.output.setAccessibleDescription(
+            "Zeigt Programm- und pdb-Ausgaben des aktuellen Debug- oder Ausführungslaufs."
+        )
         self.output.setStyleSheet("""
             QPlainTextEdit {
                 background-color: #1a1a1a;
@@ -1908,12 +1937,21 @@ class DebugOutputPanel(QWidget):
         
         self.lbl_prompt = QLabel("(Pdb)")
         self.lbl_prompt.setStyleSheet("color: #00ff00; font-weight: bold;")
+        self.lbl_prompt.setAccessibleName("pdb-Eingabeaufforderung")
+        self.lbl_prompt.setAccessibleDescription(
+            "Kennzeichnet die Eingabezeile für Befehle an den Python-Debugger."
+        )
         self.lbl_prompt.setVisible(False)
         input_layout.addWidget(self.lbl_prompt)
         
         self.input_line = QLineEdit()
-        self.input_line.setPlaceholderText("pdb-Befehl eingeben (n=next, s=step, c=continue, p var=print, q=quit)")
+        self.input_line.setPlaceholderText("pdb-Befehl eingeben (n=nächste Zeile, s=hineinspringen, c=fortsetzen, p var=ausgeben, q=beenden)")
         self.input_line.setFont(QFont("Consolas", 9))
+        self.input_line.setToolTip("pdb-Befehl eingeben und mit Enter senden")
+        self.input_line.setAccessibleName("pdb-Befehl")
+        self.input_line.setAccessibleDescription(
+            "Sendet Debugger-Befehle an pdb. Enter sendet den Befehl; Pfeil hoch und Pfeil runter navigieren durch die Befehlshistorie."
+        )
         self.input_line.setStyleSheet("""
             QLineEdit {
                 background-color: #2a2a2a;
@@ -1927,6 +1965,13 @@ class DebugOutputPanel(QWidget):
         input_layout.addWidget(self.input_line)
         
         layout.addLayout(input_layout)
+
+    def _configure_debug_button(self, button: QPushButton, accessible_name: str, tooltip: str, description: str):
+        button.setToolTip(tooltip)
+        button.setStatusTip(tooltip)
+        button.setAccessibleName(accessible_name)
+        button.setAccessibleDescription(description)
+        button.setEnabled(False)
 
     def eventFilter(self, obj, event):
         """Behandelt Pfeiltasten für Command-History"""
