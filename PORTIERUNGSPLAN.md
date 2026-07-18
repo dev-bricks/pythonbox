@@ -72,7 +72,7 @@ Empfohlene Austauschwege:
 
 - `PORTIERUNGSPLAN.md` als verbindliche Entscheidung pflegen.
 - README und Changelog mit Desktop-only-Strategie synchron halten.
-- Alte Aufgabenclaims zu CLI/REST bei Gelegenheit gegen den tatsächlichen Code prüfen, weil die aktuelle Codebasis vor allem eine GUI-App ist.
+- [x] Alte Aufgabenclaims zu CLI/REST gegen den tatsächlichen Code geprüft (2026-06-05, CLI-Stand 2026-06-19/27 synchronisiert): `--open`, `--lint`, `--theme` und `--run` sind real vorhanden; REST/OpenAPI/Fernsteuerung bleiben Nicht-Ziel bzw. Zukunfts-Scope.
 
 ### P1 - macOS/Linux-Smokes
 
