@@ -2,16 +2,17 @@
 
 # PythonBox — Lightweight Python IDE for Windows
 
+[English](README.md) | [Deutsch](README_de.md)
+
 > Focused editor with PDB debugging, code folding, linting, Git status, and VS Code/PyCharm handoff.
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
 [![PySide6](https://img.shields.io/badge/PySide6-6.5+-green.svg)](https://pypi.org/project/PySide6/)
 [![PythonBox tests](https://github.com/dev-bricks/pythonbox/actions/workflows/tests.yml/badge.svg)](https://github.com/dev-bricks/pythonbox/actions/workflows/tests.yml)
+[![Tests](https://img.shields.io/badge/Tests-92%20passed-brightgreen.svg)](tests/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 PythonBox is a local-first Python IDE for Windows developers who want a focused editor with PySide6, PDB debugging, code folding, linting, Git status, and optional handoff to VS Code or PyCharm.
-
-PythonBox ist eine lokale Python-IDE für Windows-Entwicklerinnen und -Entwickler, die einen fokussierten Editor mit PySide6, PDB-Debugging, Code Folding, Linting, Git-Status und optionaler Übergabe an VS Code oder PyCharm suchen.
 
 ## Start here
 
@@ -19,7 +20,7 @@ PythonBox ist eine lokale Python-IDE für Windows-Entwicklerinnen und -Entwickle
 |---|---|
 | Try the IDE from source | `python PythonBox_v8.py` |
 | Build a local Windows EXE | `build_exe.bat` |
-| Check the regression suite | `python -m unittest discover -s tests -v` |
+| Check the regression suite | `python -m pytest` |
 | Understand the platform boundary | [PORTIERUNGSPLAN.md](PORTIERUNGSPLAN.md) |
 | Give an LLM or crawler the repo context | [llms.txt](llms.txt) |
 
@@ -31,46 +32,46 @@ PythonBox is built for small Python scripts, local automation tools, learning wo
 
 ![PythonBox dark-theme Python IDE with editor, minimap, output panel, and local debugging controls](README/screenshots/main.png)
 
-## Funktionen / Features
+## Features
 
 ### Editor
-- Python-Syntax-Highlighting
-- Auto-Completion für Keywords, Builtins und Snippets
-- Code Folding für Klassen und Funktionen
-- Minimap und Bracket Matching
-- Mehrere Dateien über Tabs
+- Python syntax highlighting
+- Auto-completion for keywords, builtins, and snippets
+- Code folding for classes and functions
+- Minimap and bracket matching
+- Multi-file tabbed editing
 
-### Debugging und Entwicklung
-- Ausführen über `sys.executable`
-- PDB-Debugger im Output-Panel
-- Breakpoints über die Zeilennummern
-- Debug-Toolbar mit Step In, Step Over und Step Out
-- Linter-Integration für Pylint und Flake8
-- Git-Status, Diff und Modified-Markierung
-- Kombinierte Git-Statuscodes werden lesbar angezeigt; ersetzte Diff-Zeilen werden als geändert statt nur als hinzugefügt markiert
-- Qt6-kompatible Editor-Metriken und F5-Ausführung über das Debug-Output-Panel
-- `Speichern unter` behält bei abgebrochenem Dialog den bisherigen Dateipfad
-- Die Minimap-Einstellung bleibt zwischen Ansicht-Menü und Einstellungsdialog synchron, inklusive Fallback für ältere Konfigurationen
-- Snippet-Bibliothek und portable Editor-Einstellungen lassen sich optional als JSON importieren und exportieren (`pythonbox-snippets-v1.json`, `pythonbox-settings-v1.json`)
+### Debugging and Development
+- Execution via current Python interpreter (`sys.executable`)
+- PDB debugger inside the output panel
+- Line number breakpoint toggling
+- Debug toolbar with Step In, Step Over, and Step Out
+- Linter integration for Pylint and Flake8 (with AST fallback)
+- Git status, diff, and line-level modification markers
+- Combined Git status codes formatted readably; replaced diff lines marked as modified
+- Qt6-compatible editor metrics and F5 run via debug output panel
+- `Save As` preserves original path when dialog is cancelled
+- Minimap toggle synchronized between View menu and Settings dialog
+- Snippet library and portable editor settings import/export via JSON (`pythonbox-snippets-v1.json`, `pythonbox-settings-v1.json`)
 
-### Windows-Paketierung
-- `PythonBox.ico` wird als App- und Fenstericon verwendet, wenn die Datei vorhanden ist.
-- `build_exe.bat` erstellt eine kompakte Windows-EXE mit PyInstaller.
-- `START_PythonBox_v8.bat` startet die Anwendung direkt aus dem Checkout.
+### Windows Packaging
+- `PythonBox.ico` used as app and window icon when present
+- `build_exe.bat` builds a compact Windows executable via PyInstaller
+- `START_PythonBox_v8.bat` launches the app directly from checkout
 
-### Plattformstrategie
-- Windows bleibt die primäre Desktop-Plattform.
-- macOS und Linux sind sinnvolle Source-Smoke-Ziele aus derselben PySide6-Codebasis.
-- Android, iOS und Web/PWA sind keine aktuellen Ziele, weil PythonBox lokale Dateien, lokale Interpreter, Debugger, Linter und Git direkt nutzt.
+### Platform Strategy
+- Windows remains the primary desktop platform
+- macOS and Linux serve as source-smoke targets from the same PySide6 codebase
+- Android, iOS, and Web/PWA are explicitly out of scope because PythonBox relies on local files, local interpreters, PDB, linters, and Git
 
 ## Installation
 
-### Voraussetzungen / Requirements
+### Requirements
 - Python 3.10+
 - PySide6 6.5+
 - Optional: Git, Pylint, Flake8, VS Code, PyCharm
 
-### Start aus dem Quellcode / Run from source
+### Run from source
 
 ```bash
 git clone https://github.com/dev-bricks/pythonbox.git
@@ -79,9 +80,9 @@ pip install -r requirements.txt
 python PythonBox_v8.py
 ```
 
-Unter Windows kann alternativ `START_PythonBox_v8.bat` per Doppelklick gestartet werden.
+On Windows, `START_PythonBox_v8.bat` can be launched via double click.
 
-Optional kann direkt beim Start eine Datei geöffnet werden:
+Optionally open a file or set a theme on startup:
 
 ```bash
 python PythonBox_v8.py --open demo.py
@@ -89,71 +90,65 @@ python PythonBox_v8.py demo.py
 python PythonBox_v8.py --theme dracula --open demo.py
 ```
 
-Headless ist außerdem ein schlanker Run-Modus für lokale Automationen vorhanden:
+Headless modes for local automation and linter pipelines:
 
 ```bash
 python PythonBox_v8.py --run demo.py
-python PythonBox_v8.py --run demo.py --flag wert
+python PythonBox_v8.py --lint demo.py
 ```
 
-Weitere Headless-CLI-Befehle oder eine REST-API sind aktuell nicht Teil des Projekts.
-
-### Windows-EXE bauen / Build Windows EXE
+### Build Windows EXE
 
 ```bash
 pip install pyinstaller
 build_exe.bat
 ```
 
-Das Build-Ergebnis liegt anschließend in `dist/`. Build-Artefakte und lokale Releases sind bewusst nicht Teil des Git-Repositories.
+The resulting build is placed in `dist/`. Build artifacts and local releases are intentionally excluded from the Git repository.
 
 ## Tests
 
-Die Regressionstests prüfen die Qt6-API-Kompatibilität, die F5-Ausführung über `debug_output.run_normal`, die externe Terminal-Ausführung mit dem aktuellen Python-Interpreter, die Minimap-Einstellungssynchronisation, Git-Status-/Diff-Erkennung, den JSON-Austausch für Snippets und Einstellungen, `Speichern unter`-Abbruchverhalten und einen Offscreen-Smoke-Test für das Hauptfenster.
+The test suite includes 92 unit and regression tests (Pytest & Unittest). It verifies Qt6 API compatibility, F5 execution routing, PDB debugger interaction, linter fallbacks, Git diff/status handling, JSON import/export, headless CLI flags (`--run`, `--lint`), and offscreen main window construction.
 
 ```bash
-python -m unittest discover -s tests -v
+python -m pytest
 ```
 
-GitHub Actions führt diese Prüfungen unter Windows für Python 3.10 bis 3.12 aus.
+GitHub Actions executes these checks on Windows for Python 3.10 through 3.12.
 
-## Tastenkürzel / Keyboard Shortcuts
+## Keyboard Shortcuts
 
-| Shortcut | Funktion / Action |
+| Shortcut | Action |
 |---|---|
-| `Ctrl+F` | Suchen / Find |
-| `Ctrl+H` | Ersetzen / Replace |
-| `Ctrl+G` | Gehe zu Zeile / Go to line |
-| `Ctrl+/` | Kommentieren / Toggle comment |
-| `F5` | Ausführen / Run |
-| `F9` | Breakpoint umschalten / Toggle breakpoint |
+| `Ctrl+F` | Find |
+| `Ctrl+H` | Replace |
+| `Ctrl+G` | Go to line |
+| `Ctrl+/` | Toggle comment |
+| `F5` | Run |
+| `F9` | Toggle breakpoint |
 | `F10` | Step Over |
 | `F11` | Step Into |
 
-## Datenschutz / Privacy
+## Privacy
 
-PythonBox arbeitet lokal. Es gibt keine Telemetrie, keinen Cloud-Sync und keine eingebauten externen API-Aufrufe. Dateien werden nur geöffnet, gespeichert oder ausgeführt, wenn Nutzerinnen und Nutzer diese Aktionen in der App auslösen.
+PythonBox operates 100% locally. It contains no telemetry, no cloud sync, and no built-in external API calls. Files are opened, saved, or executed only when explicitly triggered by user action.
 
-PythonBox runs locally. It does not include telemetry, cloud sync, or built-in external API calls. Files are opened, saved, or executed only when users trigger those actions in the app.
+## Repository Hygiene
 
-## Repository-Hygiene
-
-Nicht versioniert werden interne Aufgabenlisten, Test-Locks, lokale Build-Artefakte, Release-Ordner, virtuelle Umgebungen, Datenbanken, Secrets und IDE-/OS-Metadaten. Details stehen in `.gitignore`.
+Internal task lists, test locks, local build artifacts, release folders, virtual environments, databases, secrets, and IDE/OS metadata are untracked. Details are specified in `.gitignore`.
 
 ## Roadmap
 
-PythonBox bleibt als schlanke Python-IDE erhalten. Die geplante Multi-Language-Erweiterung läuft separat unter CodeBox.
+PythonBox remains a lightweight Python IDE. Multi-language support is developed separately under CodeBox.
 
 ## Discovery keywords
 
 `python ide`, `lightweight python editor`, `pyside6 code editor`, `windows python ide`, `local-first developer tool`, `pdb debugger gui`, `python linting`, `code folding`, `git diff editor`, `vs code handoff`, `pycharm handoff`, `offline python editor`
 
-## Lizenz / License
+## License
 
-MIT License, siehe [LICENSE](LICENSE).
+MIT License, see [LICENSE](LICENSE).
 
-## Haftung / Liability
+## Liability
 
-Dieses Projekt wird unentgeltlich als Open Source bereitgestellt. Nutzung auf eigenes Risiko. Es gibt keine Wartungszusage, keine Verfügbarkeitsgarantie und keine Gewähr für Fehlerfreiheit oder Eignung für einen bestimmten Zweck. Ergänzend gilt der Haftungsausschluss der MIT-Lizenz.
-
-This project is provided as free open source software. Use it at your own risk. There is no maintenance commitment, availability guarantee, or warranty of fitness for a particular purpose. The MIT license disclaimer also applies.
+This project is provided as free open source software. Use it at your own risk. There is no maintenance commitment, availability guarantee, or warranty of fitness for a particular purpose. The MIT license disclaimer applies.

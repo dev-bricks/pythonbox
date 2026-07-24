@@ -8,20 +8,21 @@ License: MIT
 
 ## Summary
 
-PythonBox is a lightweight local-first Python IDE for Windows. It combines a PySide6 editor, PDB debugging, code folding, linting hooks, Git status/diff visibility, and optional handoff to VS Code or PyCharm.
+PythonBox is a lightweight local-first Python IDE for Windows. It combines a PySide6 editor, PDB debugging, code folding, linting hooks (Flake8/Pylint/AST), Git status/diff visibility, and optional handoff to VS Code or PyCharm.
 
 ## Audience
 
-- Windows users who want a focused Python editor without a full IDE setup.
+- Windows developers who want a focused Python editor without a full IDE setup.
 - Learners and automation builders who need run/debug/lint/Git feedback in one local desktop app.
-- LLM-assisted coding workflows where files remain local and users want a small GUI around scripts.
+- LLM-assisted coding workflows where files remain local and users want a lightweight GUI around scripts.
 
 ## What this repository contains
 
 - `PythonBox_v8.py`: main PySide6 application.
 - `README.md`: user-facing overview, installation, features, privacy boundary, and discovery keywords.
+- `README_de.md`: German documentation and user guide.
 - `PORTIERUNGSPLAN.md`: platform strategy for Windows-first desktop use and source-smoke portability.
-- `tests/`: regression tests for Qt6 compatibility, execution routing, Git diff/status handling, minimap settings, CLI lint mode, and an offscreen window smoke test.
+- `tests/`: 92 unit & regression tests covering Qt6 compatibility, execution routing, PDB debugging, Git diff/status handling, minimap settings, CLI lint mode (`--lint`), script execution (`--run`), and an offscreen window smoke test.
 - `.github/workflows/tests.yml`: Windows regression test workflow for Python 3.10, 3.11, and 3.12.
 
 ## CLI usage
@@ -29,6 +30,8 @@ PythonBox is a lightweight local-first Python IDE for Windows. It combines a PyS
 - `python PythonBox_v8.py` — start GUI
 - `python PythonBox_v8.py --open <file>` — start GUI with file open
 - `python PythonBox_v8.py <file>` — start GUI with file open (shorthand)
+- `python PythonBox_v8.py --theme <theme>` — set UI theme (dark, light, monokai, dracula)
+- `python PythonBox_v8.py --run <file>` — headless script execution with current interpreter
 - `python PythonBox_v8.py --lint <file>` — headless lint (no GUI), exit 0/1/2
 
 ## Search phrases
@@ -43,4 +46,4 @@ PythonBox is not Jetify Devbox, Microsoft Dev Box, Box Python SDK, Pybricks, or 
 
 PythonBox does not include telemetry, cloud sync, bundled credentials, or built-in external service API calls. It opens, saves, and executes files only through user-triggered local workflows.
 
-## Last-checked: 2026-06-19
+## Last-checked: 2026-07-24
