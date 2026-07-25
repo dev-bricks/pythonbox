@@ -170,6 +170,7 @@ PythonBox bleibt als schlanke Python-IDE erhalten. Die geplante Multi-Language-E
 ## Lizenz / License
 
 MIT License, siehe [LICENSE](LICENSE).
+Runtime-Abhängigkeiten sind in [THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt) dokumentiert.
 
 ## Haftung / Liability
 

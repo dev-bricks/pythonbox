@@ -6,10 +6,12 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Build / Release
+- Standard-`START.bat` ergänzt, der den bestehenden `START_PythonBox_v8.bat` nutzt; `build_exe.bat` baut nun über die lokale Build-Venv `C:\_Local_DEV\venvs\pythonbox_build` und den OneDrive-externen Buildroot `C:\_Local_DEV\codex_build\pythonbox`. EXE neu gebaut 2026-06-28; SHA256: `C249CB6A4C90593607517DB00E75240D42C381E0714889FC198ECD4AA749D22D`.
 - EXE neu gebaut 2026-06-04 (PyInstaller, OneDrive-externer Build); `START_PythonBox_v8.bat` startet jetzt bevorzugt `dist\PythonBox.exe` und fällt danach auf Root-EXE bzw. Python-Fallback zurück. SHA256: `1F5C024682B5B77BD04963E972F3EDAB9D9E606DE1339D390D2181A8606672BC`.
 - EXE neu gebaut 2026-06-01 (PyInstaller `--onefile`, `PythonBox.exe`); 14/14 Tests grün, Smoke-Test bestanden. Vorherige EXE: 2026-04-29.
 
 ### Hinzugefügt / Added
+- `THIRD_PARTY_LICENSES.txt` dokumentiert die direkte PySide6-Runtime-Abhängigkeit und die Qt-for-Python-Wheels; ein Guard-Test schützt das Inventar gegen Dependency-Drift.
 - CLI-Startflag `--theme <dark|light|monokai|dracula>` für Theme-Overrides beim GUI-Start und `--run <datei>` für headless Script-Ausführung mit dem aktuellen Interpreter und optionalen Script-Argumenten.
 - Neue Regressionstests für `--run`, Theme-Normalisierung und Theme-Anwendung ohne GUI-Divergenz.
 - CLI-Lint-Modus: `python PythonBox_v8.py --lint <datei>` führt headless Linting durch (flake8 → pylint → AST-Fallback) und gibt Ergebnisse auf stdout aus. Exit-Codes: 0 = sauber, 1 = Findings, 2 = Fehler. Kein GUI-Start. Nützlich für CI, Automationen und LLM-Agenten.
