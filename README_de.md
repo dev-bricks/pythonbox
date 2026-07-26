@@ -10,9 +10,18 @@
 [![PySide6](https://img.shields.io/badge/PySide6-6.5+-green.svg)](https://pypi.org/project/PySide6/)
 [![PythonBox tests](https://github.com/dev-bricks/pythonbox/actions/workflows/tests.yml/badge.svg)](https://github.com/dev-bricks/pythonbox/actions/workflows/tests.yml)
 [![Tests](https://img.shields.io/badge/Tests-92%20passed-brightgreen.svg)](tests/)
+[![LLM-Ready](https://img.shields.io/badge/LLM--Ready-llms.txt-blueviolet.svg)](llms.txt)
+[![Ecosystem](https://img.shields.io/badge/Ecosystem-dev--bricks-blue.svg)](https://github.com/dev-bricks)
+[![Umbrella](https://img.shields.io/badge/Umbrella-open--bricks-indigo.svg)](https://github.com/open-bricks)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 PythonBox ist eine lokale Python-IDE für Windows-Entwicklerinnen und -Entwickler, die einen fokussierten Editor mit PySide6, PDB-Debugging, Code Folding, Linting, Git-Status und optionaler Übergabe an VS Code oder PyCharm suchen.
+
+> [!NOTE]
+> **Local-First & Zero-Telemetry**: PythonBox läuft 100% lokal ohne Cloud-Zwang, ohne Telemetrie und speichert Daten ausschließlich auf dem lokalen Dateisystem. Das Repository ist für KI-Agenten und LLM-Workflows über `llms.txt` optimiert.
+
+> [!TIP]
+> **PDB-Debugging & Headless-Modus**: Breakpoints lassen sich direkt im GUI-Editor setzen oder in CI/Automatisierungs-Pipelines headless über `--run demo.py` bzw. `--lint demo.py` ausführen.
 
 ## Schnellstart
 
@@ -28,7 +37,33 @@ PythonBox ist eine lokale Python-IDE für Windows-Entwicklerinnen und -Entwickle
 
 PythonBox wurde für kleine Python-Skripte, lokale Automatisierungstools, Lern-Workflows und KI-unterstützte Coding-Sessions entwickelt, bei denen eine vollständige IDE zu schwerfällig wirkt. Es hält den Kern-Workflow in einem einzigen Desktop-Fenster: Datei öffnen, Python editieren, mit dem aktuellen Interpreter ausführen, Ausgaben prüfen, mit Breakpoints debuggen und Git-Änderungen einsehen, bevor die Datei bei Bedarf an eine größere IDE übergeben wird.
 
+## Systemarchitektur
+
+```mermaid
+flowchart TD
+    subgraph GUI ["PythonBox PySide6 Desktop GUI"]
+        ED["Editor-Fenster (QTextEdit / Minimap)"]
+        DBG["PDB-Debugger Panel"]
+        OUT["Konsole & Output-Log"]
+        GIT_PANEL["Git-Status & Diff-Markierungen"]
+    end
+
+    subgraph CORE ["Kern-Engine"]
+        LINT["Linter-Hook (Flake8 / Pylint / AST-Fallback)"]
+        EXEC["Interpreter-Runner (sys.executable)"]
+        HANDOFF["Handoff-Brücke (VS Code / PyCharm)"]
+    end
+
+    ED --> EXEC
+    ED --> LINT
+    EXEC --> OUT
+    EXEC --> DBG
+    ED --> HANDOFF
+    GIT_PANEL --> ED
+```
+
 ## Screenshot
+
 
 ![PythonBox dark-theme Python IDE mit Editor, Minimap, Output-Panel und lokalem Debugging](README/screenshots/main.png)
 

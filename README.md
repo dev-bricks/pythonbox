@@ -10,9 +10,18 @@
 [![PySide6](https://img.shields.io/badge/PySide6-6.5+-green.svg)](https://pypi.org/project/PySide6/)
 [![PythonBox tests](https://github.com/dev-bricks/pythonbox/actions/workflows/tests.yml/badge.svg)](https://github.com/dev-bricks/pythonbox/actions/workflows/tests.yml)
 [![Tests](https://img.shields.io/badge/Tests-92%20passed-brightgreen.svg)](tests/)
+[![LLM-Ready](https://img.shields.io/badge/LLM--Ready-llms.txt-blueviolet.svg)](llms.txt)
+[![Ecosystem](https://img.shields.io/badge/Ecosystem-dev--bricks-blue.svg)](https://github.com/dev-bricks)
+[![Umbrella](https://img.shields.io/badge/Umbrella-open--bricks-indigo.svg)](https://github.com/open-bricks)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 PythonBox is a local-first Python IDE for Windows developers who want a focused editor with PySide6, PDB debugging, code folding, linting, Git status, and optional handoff to VS Code or PyCharm.
+
+> [!NOTE]
+> **Local-First & Zero Telemetry**: PythonBox is engineered to run 100% offline with zero cloud sync, zero telemetry, and local file storage. It is fully indexable and optimized for LLM-assisted workflows via `llms.txt`.
+
+> [!TIP]
+> **PDB Debugging & Headless Mode**: Toggle breakpoints directly in the GUI editor or launch PythonBox headlessly in CI/automation pipelines using `--run demo.py` or `--lint demo.py`.
 
 ## Start here
 
@@ -28,7 +37,33 @@ PythonBox is a local-first Python IDE for Windows developers who want a focused 
 
 PythonBox is built for small Python scripts, local automation tools, learning workflows, and LLM-assisted coding sessions where a full IDE can feel too heavy. It keeps the core loop in one desktop window: open a file, edit Python, run it with the current interpreter, inspect output, debug with breakpoints, and check Git changes before handing the file to a larger IDE when needed.
 
+## System Architecture
+
+```mermaid
+flowchart TD
+    subgraph GUI ["PythonBox PySide6 Desktop GUI"]
+        ED["Editor Window (QTextEdit / Minimap)"]
+        DBG["PDB Debugger Panel"]
+        OUT["Console & Output Log"]
+        GIT_PANEL["Git Status & Diff Markers"]
+    end
+
+    subgraph CORE ["Core Engine"]
+        LINT["Linter Hook (Flake8 / Pylint / AST Fallback)"]
+        EXEC["Interpreter Runner (sys.executable)"]
+        HANDOFF["Handoff Bridge (VS Code / PyCharm)"]
+    end
+
+    ED --> EXEC
+    ED --> LINT
+    EXEC --> OUT
+    EXEC --> DBG
+    ED --> HANDOFF
+    GIT_PANEL --> ED
+```
+
 ## Screenshot
+
 
 ![PythonBox dark-theme Python IDE with editor, minimap, output panel, and local debugging controls](README/screenshots/main.png)
 

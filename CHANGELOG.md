@@ -6,7 +6,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 ## [Unreleased]
 
 ### Geändert / Changed
+- Discoverability & Marketing Audit (2026-07-26): `README.md` & `README_de.md` mit LLM-Ready-, Ecosystem- und Umbrella-Badges, GFM-Hinweisboxen (`> [!NOTE]` / `> [!TIP]`) und Mermaid-Systemarchitekturdiagramm erweitert; `llms.txt` Header auf `Last-checked: 2026-07-26` aktualisiert (92/92 Pytest-Tests 100% grün).
 - Dokumentations- & Sichtbarkeitspflege (2026-07-24): `llms.txt` auf `Last-checked: 2026-07-24` mit aktualisierter Testsuite-Beschreibung (92 Pytest-Tests) aktualisiert, dedizierte deutsche Startseite (`README_de.md`) angelegt, zweisprachige Sprachwahl-Navigation (`[English](README.md) | [Deutsch](README_de.md)`) oben in den READMEs integriert und Test-Badge ergänzt.
+
 
 ### Build / Release
 - EXE neu gebaut 2026-06-04 (PyInstaller, OneDrive-externer Build); `START_PythonBox_v8.bat` startet jetzt bevorzugt `dist\PythonBox.exe` und fällt danach auf Root-EXE bzw. Python-Fallback zurück. SHA256: `1F5C024682B5B77BD04963E972F3EDAB9D9E606DE1339D390D2181A8606672BC`.
