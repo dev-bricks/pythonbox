@@ -3379,6 +3379,8 @@ class PythonArchitect(QMainWindow):
         # --- LINTER PANEL (DOCK) (NEU v7!) ---
         self.linter_dock = QDockWidget("Linter Probleme", self)
         self.linter_list = QListWidget()
+        self.linter_list.setAccessibleName("Linter-Meldungsliste")
+        self.linter_list.setAccessibleDescription("Liste aller von der statischen Codeanalyse erkannten Fehler und Warnungen")
         self.linter_list.setStyleSheet("""
             QListWidget {
                 background-color: #1e1e1e;
@@ -3407,13 +3409,22 @@ class PythonArchitect(QMainWindow):
         
         # --- GIT STATUS LABEL (NEU v7!) ---
         self.git_label = QLabel("")
+        self.git_label.setAccessibleName("Git-Status")
+        self.git_label.setAccessibleDescription("Aktueller Git-Branch und Dateistatus des aktiven Dokuments")
+        self.git_label.setToolTip("Git-Branch und Dateistatus")
         self.status_bar.addWidget(self.git_label)
         
         self.pos_label = QLabel("Zeile: 1 | Spalte: 1")
+        self.pos_label.setAccessibleName("Cursorposition")
+        self.pos_label.setAccessibleDescription("Zeile 1, Spalte 1")
+        self.pos_label.setToolTip("Aktuelle Cursorposition (Zeile und Spalte)")
         self.status_bar.addPermanentWidget(self.pos_label)
         
         # Linter-Status
         self.linter_status = QLabel("")
+        self.linter_status.setAccessibleName("Linter-Status")
+        self.linter_status.setAccessibleDescription("Ergebnis der statischen Codeanalyse")
+        self.linter_status.setToolTip("Linter-Status (Fehler und Warnungen)")
         self.status_bar.addPermanentWidget(self.linter_status)
 
 
@@ -3439,12 +3450,14 @@ class PythonArchitect(QMainWindow):
                 if tab and tab.file_path:
                     status = self.git.get_file_status(tab.file_path)
                     self.git_label.setText(f"Git: {status}" if status else "")
+                    self.git_label.setAccessibleDescription(f"Git-Status: {status}" if status else "Keine Git-Informationen")
                     
                     # Git-Zeilen-Markierungen
                     added, modified, deleted = self.git.get_modified_lines(tab.file_path)
                     editor.set_git_status(added, modified)
                 else:
                     self.git_label.setText("")
+                    self.git_label.setAccessibleDescription("Keine Git-Informationen")
             
             # Minimap aktualisieren
             if hasattr(self, 'minimap_action'):
@@ -3452,6 +3465,7 @@ class PythonArchitect(QMainWindow):
 
     def update_cursor_position(self, line: int, col: int):
         self.pos_label.setText(f"Zeile: {line} | Spalte: {col}")
+        self.pos_label.setAccessibleDescription(f"Zeile {line}, Spalte {col}")
 
     # --- RECENT FILES ---
     
@@ -3771,10 +3785,12 @@ class PythonArchitect(QMainWindow):
         # Status
         if errors:
             self.linter_status.setText(f"❌ {error_count} | ⚠️ {warning_count}")
+            self.linter_status.setAccessibleDescription(f"Linter-Status: {error_count} Fehler, {warning_count} Warnungen")
             self.linter_dock.show()
             self.linter_action.setChecked(True)
         else:
             self.linter_status.setText("✓ Keine Probleme")
+            self.linter_status.setAccessibleDescription("Linter-Status: Keine Probleme gefunden")
         
         self.status_bar.showMessage(f"Linter: {error_count} Fehler, {warning_count} Warnungen", 3000)
 

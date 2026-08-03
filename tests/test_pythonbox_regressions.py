@@ -156,6 +156,32 @@ class PythonArchitectRegressionTests(unittest.TestCase):
             window.deleteLater()
             app.processEvents()
 
+    def test_statusbar_and_linter_indicators_expose_accessible_context(self):
+        os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+        module = load_pythonbox_module()
+        app = module.QApplication.instance() or module.QApplication([])
+        window = module.PythonArchitect()
+
+        try:
+            self.assertEqual("Git-Status", window.git_label.accessibleName())
+            self.assertTrue(window.git_label.toolTip())
+            self.assertEqual("Cursorposition", window.pos_label.accessibleName())
+            self.assertIn("Zeile 1, Spalte 1", window.pos_label.accessibleDescription())
+            self.assertTrue(window.pos_label.toolTip())
+
+            window.update_cursor_position(10, 25)
+            self.assertEqual("Zeile: 10 | Spalte: 25", window.pos_label.text())
+            self.assertIn("Zeile 10, Spalte 25", window.pos_label.accessibleDescription())
+
+            self.assertEqual("Linter-Status", window.linter_status.accessibleName())
+            self.assertTrue(window.linter_status.toolTip())
+            self.assertEqual("Linter-Meldungsliste", window.linter_list.accessibleName())
+            self.assertIn("statischen Codeanalyse", window.linter_list.accessibleDescription())
+        finally:
+            window.close()
+            window.deleteLater()
+            app.processEvents()
+
     def test_apply_theme_normalizes_and_tracks_theme_name(self):
         os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
         module = load_pythonbox_module()

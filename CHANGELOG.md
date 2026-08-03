@@ -5,6 +5,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Barrierefreiheit & UX / Accessibility & UX
+- Barrierefreiheits- & UX-Erweiterung (2026-08-03): Statusleisten-Indikatoren (`git_label`, `pos_label`, `linter_status`), Linter-Meldungsliste (`linter_list`) und Linter-Dock wurden mit vollständigen Barrierefreiheits-Attributen (`AccessibleName`, `AccessibleDescription`, `ToolTip`) sowie dynamischen Accessible-Description-Updates für Screenreader bei Textänderungen (Cursorposition, Git-Status, Linter-Ergebnisse) ausgestattet (93/93 Pytest-Tests 100% grün).
+
 ### Geändert / Changed
 - Discoverability & Marketing Audit (2026-07-26): `README.md` & `README_de.md` mit LLM-Ready-, Ecosystem- und Umbrella-Badges, GFM-Hinweisboxen (`> [!NOTE]` / `> [!TIP]`) und Mermaid-Systemarchitekturdiagramm erweitert; `llms.txt` Header auf `Last-checked: 2026-07-26` aktualisiert (92/92 Pytest-Tests 100% grün).
 - Dokumentations- & Sichtbarkeitspflege (2026-07-24): `llms.txt` auf `Last-checked: 2026-07-24` mit aktualisierter Testsuite-Beschreibung (92 Pytest-Tests) aktualisiert, dedizierte deutsche Startseite (`README_de.md`) angelegt, zweisprachige Sprachwahl-Navigation (`[English](README.md) | [Deutsch](README_de.md)`) oben in den READMEs integriert und Test-Badge ergänzt.
