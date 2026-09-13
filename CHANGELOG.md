@@ -5,6 +5,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Multi-Agent Governance & Permission Control
+- Multi-Agent Signposts & Permission Control (2026-08-03): Multi-Agenten Steuerungsdateien `AGENTS.md` und `CLAUDE.md` angelegt. Pfad-Autorität (`C:\_Local_DEV\repos\pythonbox`), Zero-Prompt Turbo/Permission Standards, Letter Hooks (`HOOK-DOC-TRAVERSAL-01`, `HOOK-WORKFLOW-HYGIENE-01`, `HOOK-PATH-VALIDATION-01`) und `LOCK*.txt` Schutzregeln verankert.
+
 ### Barrierefreiheit & UX / Accessibility & UX
 - Barrierefreiheits- & UX-Erweiterung (2026-08-03): Statusleisten-Indikatoren (`git_label`, `pos_label`, `linter_status`), Linter-Meldungsliste (`linter_list`) und Linter-Dock wurden mit vollständigen Barrierefreiheits-Attributen (`AccessibleName`, `AccessibleDescription`, `ToolTip`) sowie dynamischen Accessible-Description-Updates für Screenreader bei Textänderungen (Cursorposition, Git-Status, Linter-Ergebnisse) ausgestattet (93/93 Pytest-Tests 100% grün).
 
