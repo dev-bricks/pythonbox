@@ -5,6 +5,22 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-09-18
+
+### Hinzugefügt / Added
+- PEP 621 Standardisierung: `pyproject.toml` mit vollständigen Metadaten, `license-files`, `[project.urls]`, `[tool.pytest.ini_options]` und `[tool.ruff]`.
+- Software Bill of Materials & Governance: `THIRD_PARTY_LICENSES.md` mit Bestätigung der dynamischen PySide6 LGPL-3.0-only Bindung, PSF-2.0 und Invarianten `INV-LOCAL-01` bis `INV-SLA-10`.
+- Service Level Agreements & Security Policy: `SECURITY.md` mit Supported Versions Tabelle (`1.0.x / master`), 48h Response SLA und 5-tägigem Triage-Verfahren.
+- Lokales Audit- & Discoverability-Log: `MARKETING-LOG.txt` mit 4 Zielgruppen-Personas (`[PERSONA-01]`..`[PERSONA-04]`), 10-Dimensionen-Vergleichsmatrix vs. 4 Alternativen.
+- Vertragstest-Suite: `tests/test_metadata.py` für automatisierte Integritätsprüfung von PEP 621, CI-Workflows, Timeouts, `.gitignore` Multi-Host-Mustern und Versionsparität.
+
+### Geändert / Changed
+- Versions-Harmonisierung: `__version__ = "1.0.1"` in `PythonBox_v8.py`, `pyproject.toml`, `README.md`, `README_de.md` und `llms.txt`.
+- CI-Workflow Härtung: Concurrency-Gruppen (`cancel-in-progress: true`) und explizite Job-Timeouts für alle 4 Workflows (`tests.yml`, `source-platform-smoke.yml`, `stale.yml`, `welcome.yml`); Python 3.13 zur Testmatrix hinzugefügt.
+- Multi-Host Cloud-Sync & Lock-Schutz in `.gitignore` verankert (`*conflicted copy*`, `*-ASUS-GEI*`, `LOCK*`, `.hypothesis/`, etc.).
+- Barrierefreie & formatierungsbereinigte Test-Skripte: Ambivalente Schleifenvariablen in `tests/test_cli_lint.py` und `tests/test_pythonbox_regressions.py` behoben; Ruff-Linter 100% sauber.
+- Haftungsausschluss: BGB § 521 Gefälligkeitsrecht in `README_de.md` ergänzt.
+
 ### Multi-Agent Governance & Permission Control
 - Multi-Agent Signposts & Permission Control (2026-08-03): Multi-Agenten Steuerungsdateien `AGENTS.md` und `CLAUDE.md` angelegt. Pfad-Autorität (`C:\_Local_DEV\repos\pythonbox`), Zero-Prompt Turbo/Permission Standards, Letter Hooks (`HOOK-DOC-TRAVERSAL-01`, `HOOK-WORKFLOW-HYGIENE-01`, `HOOK-PATH-VALIDATION-01`) und `LOCK*.txt` Schutzregeln verankert.
 

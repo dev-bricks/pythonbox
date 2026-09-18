@@ -4,6 +4,7 @@ Canonical repository: https://github.com/dev-bricks/pythonbox
 Primary README: https://github.com/dev-bricks/pythonbox#readme
 Owner organization: dev-bricks
 Default branch: master
+Version: 1.0.1
 License: MIT
 
 ## Summary
@@ -18,12 +19,17 @@ PythonBox is a lightweight local-first Python IDE for Windows. It combines a PyS
 
 ## What this repository contains
 
-- `PythonBox_v8.py`: main PySide6 application.
+- `PythonBox_v8.py`: main PySide6 application (v1.0.1).
+- `pyproject.toml`: PEP 621 project metadata, tool configurations, and ecosystem links.
 - `README.md`: user-facing overview, installation, features, privacy boundary, and discovery keywords.
-- `README_de.md`: German documentation and user guide.
+- `README_de.md`: German documentation, user guide, and § 521 BGB liability disclaimer.
+- `SECURITY.md`: vulnerability disclosure policy, supported versions table, and 48-hour response SLA.
+- `THIRD_PARTY_LICENSES.md`: Software Bill of Materials (SBOM), PySide6 LGPL-3.0 dynamic linking verification, and invariants table.
+- `MARKETING-LOG.txt`: personas, competitive matrix, and architectural validation.
 - `PORTIERUNGSPLAN.md`: platform strategy for Windows-first desktop use and source-smoke portability.
-- `tests/`: 92 unit & regression tests covering Qt6 compatibility, execution routing, PDB debugging, Git diff/status handling, minimap settings, CLI lint mode (`--lint`), script execution (`--run`), and an offscreen window smoke test.
-- `.github/workflows/tests.yml`: Windows regression test workflow for Python 3.10, 3.11, and 3.12.
+- `tests/`: comprehensive unit, regression, and metadata contract tests covering Qt6 compatibility, execution routing, PDB debugging, Git diff/status handling, minimap settings, CLI lint mode (`--lint`), script execution (`--run`), and offscreen smoke tests.
+- `.github/workflows/tests.yml`: hardened Windows regression test matrix for Python 3.10, 3.11, 3.12, and 3.13 with concurrency control and timeouts.
+- `.github/workflows/source-platform-smoke.yml`: cross-platform import smoke tests on Ubuntu and macOS.
 
 ## CLI usage
 
@@ -44,6 +50,6 @@ PythonBox is not Jetify Devbox, Microsoft Dev Box, Box Python SDK, Pybricks, or 
 
 ## Safety and privacy boundary
 
-PythonBox does not include telemetry, cloud sync, bundled credentials, or built-in external service API calls. It opens, saves, and executes files only through user-triggered local workflows.
+PythonBox does not include telemetry, cloud sync, bundled credentials, or built-in external service API calls. It opens, saves, and executes files only through user-triggered local workflows under unprivileged `RunAsInvoker` mode.
 
-## Last-checked: 2026-07-26
+## Last-checked: 2026-09-18

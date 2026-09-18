@@ -33,6 +33,8 @@ NEUE FEATURES v8:
 - PyCharm Integration (optional)
 """
 
+__version__ = "1.0.1"
+
 import sys
 import os
 import shutil

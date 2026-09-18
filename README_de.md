@@ -6,10 +6,14 @@
 
 > Fokussierter Editor mit PDB-Debugging, Code Folding, Linting, Git-Status und Übergabe an VS Code/PyCharm.
 
+[![Version](https://img.shields.io/badge/Version-1.0.1-blue.svg)](pyproject.toml)
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
 [![PySide6](https://img.shields.io/badge/PySide6-6.5+-green.svg)](https://pypi.org/project/PySide6/)
 [![PythonBox tests](https://github.com/dev-bricks/pythonbox/actions/workflows/tests.yml/badge.svg)](https://github.com/dev-bricks/pythonbox/actions/workflows/tests.yml)
-[![Tests](https://img.shields.io/badge/Tests-92%20passed-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-100%2B%20passed-brightgreen.svg)](tests/)
+[![Security](https://img.shields.io/badge/Security-RunAsInvoker-success.svg)](SECURITY.md)
+[![SLA](https://img.shields.io/badge/SLA-48h%20Response-blue.svg)](SECURITY.md)
+[![SBOM](https://img.shields.io/badge/SBOM-LGPL--3.0%20Dynamic-brightgreen.svg)](THIRD_PARTY_LICENSES.md)
 [![LLM-Ready](https://img.shields.io/badge/LLM--Ready-llms.txt-blueviolet.svg)](llms.txt)
 [![Ecosystem](https://img.shields.io/badge/Ecosystem-dev--bricks-blue.svg)](https://github.com/dev-bricks)
 [![Umbrella](https://img.shields.io/badge/Umbrella-open--bricks-indigo.svg)](https://github.com/open-bricks)
@@ -149,7 +153,7 @@ Die Testsuite umfasst 92 Unit- und Regressionstests (Pytest & Unittest). Sie pr�
 python -m pytest
 ```
 
-GitHub Actions führt diese Prüfungen unter Windows für Python 3.10 bis 3.12 aus.
+GitHub Actions führt diese Prüfungen unter Windows für Python 3.10 bis 3.13 aus.
 
 ## Tastenkürzel / Keyboard Shortcuts
 
@@ -186,4 +190,4 @@ MIT License, siehe [LICENSE](LICENSE).
 
 ## Haftung / Liability
 
-Dieses Projekt wird unentgeltlich als Open Source bereitgestellt. Nutzung auf eigenes Risiko. Es gibt keine Wartungszusage, keine Verfügbarkeitsgarantie und keine Gewähr für Fehlerfreiheit oder Eignung für einen bestimmten Zweck. Ergänzend gilt der Haftungsausschluss der MIT-Lizenz.
+Dieses Projekt wird unentgeltlich als Open Source bereitgestellt. Nutzung auf eigenes Risiko. Die Haftung für Sach- und Rechtsmängel ist gemäß § 521 BGB auf Vorsatz und grobe Fahrlässigkeit beschränkt. Es gibt keine Verfügbarkeitsgarantie und keine Gewähr für Fehlerfreiheit oder Eignung für einen bestimmten Zweck. Ergänzend gilt der Haftungsausschluss der MIT-Lizenz.

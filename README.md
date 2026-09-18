@@ -6,10 +6,14 @@
 
 > Focused editor with PDB debugging, code folding, linting, Git status, and VS Code/PyCharm handoff.
 
+[![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)](pyproject.toml)
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
 [![PySide6](https://img.shields.io/badge/PySide6-6.5+-green.svg)](https://pypi.org/project/PySide6/)
 [![PythonBox tests](https://github.com/dev-bricks/pythonbox/actions/workflows/tests.yml/badge.svg)](https://github.com/dev-bricks/pythonbox/actions/workflows/tests.yml)
-[![Tests](https://img.shields.io/badge/Tests-92%20passed-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-100%2B%20passed-brightgreen.svg)](tests/)
+[![Security](https://img.shields.io/badge/Security-RunAsInvoker-success.svg)](SECURITY.md)
+[![SLA](https://img.shields.io/badge/SLA-48h%20Response-blue.svg)](SECURITY.md)
+[![SBOM](https://img.shields.io/badge/SBOM-LGPL--3.0%20Dynamic-brightgreen.svg)](THIRD_PARTY_LICENSES.md)
 [![LLM-Ready](https://img.shields.io/badge/LLM--Ready-llms.txt-blueviolet.svg)](llms.txt)
 [![Ecosystem](https://img.shields.io/badge/Ecosystem-dev--bricks-blue.svg)](https://github.com/dev-bricks)
 [![Umbrella](https://img.shields.io/badge/Umbrella-open--bricks-indigo.svg)](https://github.com/open-bricks)
@@ -149,7 +153,7 @@ The test suite includes 92 unit and regression tests (Pytest & Unittest). It ver
 python -m pytest
 ```
 
-GitHub Actions executes these checks on Windows for Python 3.10 through 3.12.
+GitHub Actions executes these checks on Windows for Python 3.10 through 3.13.
 
 ## Keyboard Shortcuts
 

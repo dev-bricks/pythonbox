@@ -71,7 +71,7 @@ class TestCLILint(unittest.TestCase):
             result = run_lint(path)
             if result.returncode == 1:
                 lines = result.stdout.strip().split("\n")
-                finding_lines = [l for l in lines if path in l]
+                finding_lines = [item for item in lines if path in item]
                 for line in finding_lines:
                     self.assertRegex(line, r".+:\d+:\d+: \S+ .+")
         finally:
@@ -145,7 +145,7 @@ class TestParseCLIArgs(unittest.TestCase):
             result = run_lint(path)
             if result.returncode == 1:
                 lines = result.stdout.strip().split("\n")
-                finding_lines = [l for l in lines if path in l]
+                finding_lines = [item for item in lines if path in item]
                 self.assertTrue(len(finding_lines) > 0,
                                 "flake8 should find duplicate import")
                 for line in finding_lines:

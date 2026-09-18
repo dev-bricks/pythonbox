@@ -1,0 +1,92 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pythonbox"
+version = "1.0.1"
+description = "Lightweight local-first Python IDE for Windows with PySide6, PDB debugging, code folding, linting, and Git status."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "dev-bricks", email = "dev-bricks@users.noreply.github.com" },
+]
+keywords = [
+    "python",
+    "ide",
+    "editor",
+    "pyside6",
+    "debugger",
+    "pdb",
+    "linter",
+    "git",
+    "windows",
+    "local-first",
+    "developer-tools",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Interpreters",
+    "Topic :: Software Development :: User Interfaces",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Text Editors :: Integrated Development Environments (IDE)",
+]
+dependencies = [
+    "PySide6>=6.5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "ruff>=0.4.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/dev-bricks/pythonbox"
+"Documentation" = "https://github.com/dev-bricks/pythonbox#readme"
+"Repository" = "https://github.com/dev-bricks/pythonbox"
+"Issues" = "https://github.com/dev-bricks/pythonbox/issues"
+"Changelog" = "https://github.com/dev-bricks/pythonbox/blob/master/CHANGELOG.md"
+"Security" = "https://github.com/dev-bricks/pythonbox/blob/master/SECURITY.md"
+"Third-Party Licenses" = "https://github.com/dev-bricks/pythonbox/blob/master/THIRD_PARTY_LICENSES.md"
+"Parent Organization" = "https://github.com/dev-bricks"
+"Umbrella Ecosystem" = "https://github.com/open-bricks"
+"Marketing Log" = "https://github.com/dev-bricks/pythonbox/blob/master/MARKETING-LOG.txt"
+"LLM Ready" = "https://github.com/dev-bricks/pythonbox/blob/master/llms.txt"
+
+[tool.setuptools]
+py-modules = ["PythonBox_v8", "translator", "manage_translations"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -v"
+testpaths = ["tests"]
+norecursedirs = [
+    ".git",
+    ".pytest_cache",
+    "__pycache__",
+    "build",
+    "dist",
+    "releases",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E501"]
+per-file-ignores = { "tests/*" = ["E402"] }

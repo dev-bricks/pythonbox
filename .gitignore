@@ -1,4 +1,4 @@
-﻿# Python
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -108,3 +108,25 @@ DECISIONS.md
 PORTIERUNGSPLAN.md
 TODO.md
 DONE.md
+
+# ---- Multi-Host Cloud-Sync & Lock Guardrails ----
+*conflicted copy*
+* (Kopie)*
+* (Copy)*
+*-ASUS*
+*-ASUS-GEI*
+*-LAPTOP*
+*-WORKSTATION*
+*-WORKSTATION-LG*
+*-Mac Studio*
+*-MacBook*
+LOCK
+LOCK.*
+LOCK*.txt
+LOCK.permissions.json
+uv.lock
+!package-lock.json
+.hypothesis/
+.turbo/
+.nyc_output/
+.coverage*

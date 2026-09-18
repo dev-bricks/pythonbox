@@ -533,7 +533,7 @@ class ImportOptimizerRegressionTests(unittest.TestCase):
         self.assertIsNotNone(result)
         lines = result.splitlines()
         self.assertTrue(
-            any("coding" in l for l in lines[:3]),
+            any("coding" in line for line in lines[:3]),
             "Encoding declaration must appear in the first 3 lines after reorganisation",
         )
 
