@@ -791,6 +791,30 @@ class SearchReplaceRegressionTests(unittest.TestCase):
             "replace_all must use cursor.insertText to keep undo history intact",
         )
 
+    def test_replace_all_handles_backslashes_and_windows_paths_case_insensitively(self):
+        """replace_all must treat replacement text literally even when case-insensitivity uses regex.
+
+        Previously, case-insensitive replace_all passed replace_text directly to re.sub,
+        which interpreted backslashes as regex escape sequences / backreferences, causing
+        re.error on Windows paths (e.g. C:\\Users...) and corrupting text with backreferences.
+        """
+        module = load_pythonbox_module()
+        _app = module.QApplication.instance() or module.QApplication([])
+        editor = module.CodeEditor()
+        editor.setPlainText("file = old_path\nbackup = OLD_PATH\n")
+        bar = module.SearchReplaceBar()
+        bar.set_editor(editor)
+        bar.search_input.setText("old_path")
+        windows_path = r"C:\Users\User\Project\new_file.py"
+        bar.replace_input.setText(windows_path)
+        bar.case_check.setChecked(False)
+
+        bar.replace_all()
+
+        expected = f"file = {windows_path}\nbackup = {windows_path}\n"
+        self.assertEqual(editor.toPlainText(), expected)
+
+
 
 class ImportOptimizerTopLevelOnlyRegressionTests(unittest.TestCase):
     """Bug #20: organize_imports used ast.walk, moving function/class-level and

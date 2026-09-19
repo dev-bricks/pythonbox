@@ -2481,7 +2481,7 @@ class SearchReplaceBar(QFrame):
         if self.case_check.isChecked():
             new_text = text.replace(search_text, replace_text)
         else:
-            new_text = re.sub(re.escape(search_text), replace_text, text, flags=re.IGNORECASE)
+            new_text = re.sub(re.escape(search_text), lambda _m: replace_text, text, flags=re.IGNORECASE)
         
         if new_text != text:
             cursor = self.editor.textCursor()

@@ -5,6 +5,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Behoben / Fixed
+- Sichere Literalersetzung in `SearchReplaceBar.replace_all`: Case-insensitive Textersetzung verwendet jetzt einen Callable-Ersatz (`lambda _m: replace_text`) in `re.sub()`. Dies verhindert Abstürze mit `re.error: bad escape \u` bei Pfadangaben mit Backslashes (z. B. Windows-Pfade wie `C:\Users\...`) sowie Fehlinterpretationen von Regex-Gruppenreferenzen und stellt identisches Literal-Verhalten wie bei case-sensitiver Ersetzung sicher.
+
 ## [1.0.1] - 2026-09-18
 
 ### Hinzugefügt / Added
