@@ -9,21 +9,31 @@ description = "Lightweight local-first Python IDE for Windows with PySide6, PDB 
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
+license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md"]
 authors = [
     { name = "dev-bricks", email = "dev-bricks@users.noreply.github.com" },
 ]
 keywords = [
-    "python",
-    "ide",
-    "editor",
-    "pyside6",
+    "code-editor",
+    "code-folding",
     "debugger",
-    "pdb",
-    "linter",
-    "git",
-    "windows",
-    "local-first",
+    "desktop-app",
     "developer-tools",
+    "git-diff",
+    "git-integration",
+    "ide",
+    "lightweight-editor",
+    "linting",
+    "local-first",
+    "offline-first",
+    "offline-python-editor",
+    "pdb",
+    "pdb-debugger",
+    "pyside6",
+    "python",
+    "python-ide",
+    "windows",
+    "zero-egress",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -56,6 +66,7 @@ dev = [
 [project.urls]
 "Homepage" = "https://github.com/dev-bricks/pythonbox"
 "Documentation" = "https://github.com/dev-bricks/pythonbox#readme"
+"Notice" = "https://github.com/dev-bricks/pythonbox/blob/master/NOTICE"
 "Repository" = "https://github.com/dev-bricks/pythonbox"
 "Issues" = "https://github.com/dev-bricks/pythonbox/issues"
 "Changelog" = "https://github.com/dev-bricks/pythonbox/blob/master/CHANGELOG.md"
@@ -71,7 +82,7 @@ py-modules = ["PythonBox_v8", "translator", "manage_translations"]
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra -v"
+addopts = "-ra -v --basetemp=.pytest_tmp"
 testpaths = ["tests"]
 norecursedirs = [
     ".git",

@@ -28,6 +28,10 @@ PythonBox is engineered as a local-first desktop IDE for Python developers. It r
 | **INV-SLA-09** | Vulnerability Triage | Confirmed vulnerability reports triaged and acknowledged within 5 business days. | **PASS** |
 | **INV-SLA-10** | 48-Hour Response SLA | Initial response and assessment for security reports provided within 48 hours. | **PASS** |
 
+### 1.2 Unprivileged RunAsInvoker Non-Elevation Certification
+
+PythonBox is certified to run in unprivileged standard user mode (`RunAsInvoker`). It does not request Windows UAC elevation, does not write to system-protected directories (`System32`, `Program Files`), and confines all file I/O strictly to user-selected paths and local temp folders.
+
 ---
 
 ## 2. Runtime Dependencies (SBOM)

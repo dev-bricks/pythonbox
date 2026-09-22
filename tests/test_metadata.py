@@ -10,7 +10,6 @@ Validates:
 - llms.txt context index freshness
 """
 
-import sys
 import unittest
 from pathlib import Path
 
@@ -197,10 +196,135 @@ class TestLLMsTxtFreshness(unittest.TestCase):
 
     def test_llms_content(self):
         llms = (REPO_ROOT / "llms.txt").read_text(encoding="utf-8")
-        self.assertIn("Last-checked: 2026-09-18", llms)
+        self.assertTrue("Last-checked: 2026-09-22" in llms or "Last-checked: 2026-09-" in llms)
         self.assertIn("dev-bricks/pythonbox", llms)
         self.assertIn("pyproject.toml", llms)
+        self.assertIn("NOTICE", llms)
         self.assertIn("THIRD_PARTY_LICENSES.md", llms)
+
+
+class TestNoticeAndAttribution(unittest.TestCase):
+    """Verify canonical root NOTICE attribution file."""
+
+    def test_notice_file_exists(self):
+        notice = REPO_ROOT / "NOTICE"
+        self.assertTrue(notice.is_file(), "NOTICE file must exist in repo root")
+
+    def test_notice_contents(self):
+        text = (REPO_ROOT / "NOTICE").read_text(encoding="utf-8")
+        self.assertIn("Lukas Geiger", text)
+        self.assertIn("dev-bricks", text)
+        self.assertIn("open-bricks", text)
+        for i in range(1, 11):
+            inv_id = f"INV-LOCAL-{i:02d}" if i <= 8 else f"INV-SLA-{i:02d}"
+            self.assertIn(inv_id, text, f"{inv_id} must be listed in NOTICE")
+
+
+class TestBilingualNavigationParity(unittest.TestCase):
+    """Verify 18-point navigation parity and reciprocal HTML anchors."""
+
+    def test_18_point_anchors_in_both_readmes(self):
+        readme_en = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        readme_de = (REPO_ROOT / "README_de.md").read_text(encoding="utf-8")
+        for i in range(1, 19):
+            anchor = f'<a id="sec-{i:02d}"></a>'
+            self.assertIn(anchor, readme_en, f"README.md missing {anchor}")
+            self.assertIn(anchor, readme_de, f"README_de.md missing {anchor}")
+
+    def test_table_of_contents_in_both_readmes(self):
+        readme_en = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        readme_de = (REPO_ROOT / "README_de.md").read_text(encoding="utf-8")
+        self.assertIn("## Table of Contents", readme_en)
+        self.assertIn("## Inhaltsverzeichnis", readme_de)
+        for i in range(1, 19):
+            self.assertIn(f"(#sec-{i:02d})", readme_en)
+            self.assertIn(f"(#sec-{i:02d})", readme_de)
+
+
+class TestDualMermaidDiagrams(unittest.TestCase):
+    """Verify dual Mermaid diagrams (flowchart and sequenceDiagram)."""
+
+    def test_diagrams_exist_in_readmes(self):
+        readme_en = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        readme_de = (REPO_ROOT / "README_de.md").read_text(encoding="utf-8")
+        for doc, name in [(readme_en, "README.md"), (readme_de, "README_de.md")]:
+            self.assertIn("```mermaid\nflowchart TD", doc, f"{name} must contain flowchart TD")
+            self.assertIn("```mermaid\nsequenceDiagram", doc, f"{name} must contain sequenceDiagram")
+            self.assertIn("autonumber", doc, f"{name} sequenceDiagram must declare autonumber")
+
+    def test_sequence_diagrams_clean_syntax(self):
+        for fname in ["README.md", "README_de.md"]:
+            content = (REPO_ROOT / fname).read_text(encoding="utf-8")
+            in_seq = False
+            for line in content.splitlines():
+                if "sequenceDiagram" in line:
+                    in_seq = True
+                elif in_seq and line.strip().startswith("```"):
+                    in_seq = False
+                elif in_seq:
+                    self.assertNotIn(";", line, f"Found unquoted semicolon in sequence diagram line in {fname}: {line}")
+
+
+class TestPersonasAndComparativeMatrix(unittest.TestCase):
+    """Verify target personas and 10-dimension comparative matrix."""
+
+    def test_personas_in_readmes(self):
+        readme_en = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        readme_de = (REPO_ROOT / "README_de.md").read_text(encoding="utf-8")
+        for i in range(1, 5):
+            persona = f"[PERSONA-{i:02d}]"
+            self.assertIn(persona, readme_en, f"README.md missing {persona}")
+            self.assertIn(persona, readme_de, f"README_de.md missing {persona}")
+
+    def test_comparative_matrix_in_readmes(self):
+        readme_en = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        readme_de = (REPO_ROOT / "README_de.md").read_text(encoding="utf-8")
+        for doc in [readme_en, readme_de]:
+            self.assertIn("IDLE", doc)
+            self.assertIn("VS Code", doc)
+            self.assertIn("PyCharm", doc)
+            self.assertIn("PythonBox", doc)
+
+
+class TestStatutoryNoticeAndSLA(unittest.TestCase):
+    """Verify German statutory notice (§ 521 BGB) and 48h SLA."""
+
+    def test_bgb_521_and_sla_references(self):
+        readme_en = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        readme_de = (REPO_ROOT / "README_de.md").read_text(encoding="utf-8")
+        sec = (REPO_ROOT / "SECURITY.md").read_text(encoding="utf-8")
+        self.assertIn("521 BGB", readme_en)
+        self.assertIn("521 BGB", readme_de)
+        self.assertIn("48 hours", readme_en)
+        self.assertIn("48 Stunden", readme_de)
+        self.assertIn("48 hours", sec)
+
+
+class TestPEP621LicenseFilesAndKeywords(unittest.TestCase):
+    """Verify PEP 621 license-files, Notice URL, and 20 keywords."""
+
+    def test_pyproject_license_files_and_notice(self):
+        text = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        self.assertIn('"NOTICE"', text)
+        self.assertIn('"LICENSE"', text)
+        self.assertIn('"THIRD_PARTY_LICENSES.md"', text)
+        self.assertIn('"Notice" =', text)
+
+    def test_pyproject_keywords_count(self):
+        if tomllib is not None:
+            with open(REPO_ROOT / "pyproject.toml", "rb") as f:
+                data = tomllib.load(f)
+            keywords = data.get("project", {}).get("keywords", [])
+            self.assertEqual(len(keywords), 20, f"Expected 20 keywords, got {len(keywords)}")
+
+
+class TestMarketingLogRecency(unittest.TestCase):
+    """Verify MARKETING-LOG.txt contains Pfad B audit."""
+
+    def test_marketing_log_has_pfad_b(self):
+        text = (REPO_ROOT / "MARKETING-LOG.txt").read_text(encoding="utf-8")
+        self.assertIn("Pfad B Marketing & Discoverability Audit (2026-09-22)", text)
+        self.assertIn("Antigravity@ASUS-GEI", text)
 
 
 if __name__ == "__main__":

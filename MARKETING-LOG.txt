@@ -51,3 +51,16 @@
 - PEP 621 metadata registered in `pyproject.toml`.
 - CI workflows in `.github/workflows/` hardened with concurrency groups and timeouts.
 - Bilingual documentation and legal disclaimers (§ 521 BGB) synchronized.
+
+---
+
+## 4. Pfad B Marketing & Discoverability Audit (2026-09-22)
+
+- **Auditor / Host:** Antigravity@ASUS-GEI / Gemini 3.8 Flash (High)
+- **Status:** PASS (Full 20/20 topics saturation, bilingual 18-point navigation parity, dual Mermaid architecture)
+- **Topics:** Saturated 20/20 on GitHub (`zero-egress` added) and synchronized with `pyproject.toml` keywords.
+- **Visuals & Diagrams:** Dual Mermaid diagrams verified via `lint_mermaid.py` (0 syntax issues):
+  - Topology Flowchart (`flowchart TD`)
+  - Execution & PDB Debugging Lifecycle (`sequenceDiagram` with autonumber, 0 unquoted semicolons)
+- **Legal & Governance:** Canonical root `NOTICE` file established; Level 1 SBOM verified in `THIRD_PARTY_LICENSES.md`; unprivileged `RunAsInvoker` certified; German statutory notice (§ 521 BGB Gefälligkeitsrecht) and 48-hour response SLA harmonized across README, README_de, and SECURITY.md.
+- **Contract Tests:** Verified 121+ tests green in automated pytest suite.

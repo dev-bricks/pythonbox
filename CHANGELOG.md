@@ -5,6 +5,19 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ## [Unreleased]
 
+### Hinzugefügt / Added
+- Pfad B Discoverability & Visuelle Architektur (2026-09-22):
+  - 18-Punkte bilinguale Navigationsparität mit reziproken dualen HTML-Ankern (`sec-01` bis `sec-18`) in `README.md` und `README_de.md`.
+  - Duale Mermaid-Diagrammarchitektur: Topologie-Flussdiagramm (`flowchart TD`) und interaktiver Ausführungs- und PDB-Debugging-Lebenszyklus (`sequenceDiagram` mit `autonumber` und 0 unquotierten Semikolons), validiert gegen `lint_mermaid.py`.
+  - Kanonische Wurzel-Attributionsdatei `NOTICE` mit Urheberschaft Lukas Geiger (dev-bricks / open-bricks), Level-1-SBOM-Referenzen und Invarianten `INV-LOCAL-01`..`INV-SLA-10`.
+  - Sättigung der GitHub-Topics auf 20/20 (`zero-egress` ergänzt) und Synchronisierung mit `keywords` in `pyproject.toml`.
+  - Level-1-SBOM in `THIRD_PARTY_LICENSES.md` um explizite unprivilegierte `RunAsInvoker` Non-Elevation-Zertifizierung erweitert.
+  - Gesetzlicher Haftungsausschluss gem. § 521 BGB (Gefälligkeitsrecht) und verbindliche 48h Security Response SLA harmonisiert in `README.md`, `README_de.md` und `SECURITY.md`.
+  - Zielgruppen-Personas `[PERSONA-01]` bis `[PERSONA-04]`, High-Intent-Suchphrasen und 10-Dimensionen-Vergleichsmatrix (vs. IDLE, VS Code, PyCharm, Notepad++) in beiden Sprachfassungen integriert.
+  - Shields.io-Badges für Attribution (NOTICE), 121+ Tests | 100% green, Zero-Egress und 48h SLA synchronisiert.
+  - `llms.txt` Kontext-Index auf Stand 2026-09-22 aktualisiert.
+  - Neue automatisierte Vertragstests in `tests/test_metadata.py` zur Verifikation von NOTICE, bilingualer 18-Punkte-Parität, dualen Mermaid-Diagrammen, 20/20 Keywords und Version Freeze (`1.0.1`).
+
 ### Behoben / Fixed
 - Sichere Literalersetzung in `SearchReplaceBar.replace_all`: Case-insensitive Textersetzung verwendet jetzt einen Callable-Ersatz (`lambda _m: replace_text`) in `re.sub()`. Dies verhindert Abstürze mit `re.error: bad escape \u` bei Pfadangaben mit Backslashes (z. B. Windows-Pfade wie `C:\Users\...`) sowie Fehlinterpretationen von Regex-Gruppenreferenzen und stellt identisches Literal-Verhalten wie bei case-sensitiver Ersetzung sicher.
 

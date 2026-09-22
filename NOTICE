@@ -1,0 +1,26 @@
+PythonBox
+Copyright (c) 2026 Lukas Geiger / dev-bricks / open-bricks
+
+This product includes software developed by Lukas Geiger and the dev-bricks
+open-source project (https://github.com/dev-bricks/pythonbox), part of the
+open-bricks software umbrella ecosystem (https://github.com/open-bricks).
+
+===============================================================================
+Product Architecture & Level 1 SBOM Attributions:
+- PythonBox Desktop Application: MIT License (Copyright (c) 2026 dev-bricks)
+- PySide6 (Qt for Python): GNU Lesser General Public License version 3.0 (LGPL-3.0)
+  Dynamically linked via unmodified runtime binaries. See THIRD_PARTY_LICENSES.md.
+- Python Standard Library: Python Software Foundation License (PSF-2.0).
+
+System Invariant & Security Guarantees:
+- INV-LOCAL-01: 100% Offline Runtime & Zero Mandatory Network Egress
+- INV-LOCAL-02: Zero Telemetry, Analytics Tracking, or Phone-Home Egress
+- INV-LOCAL-03: Zero Hardcoded Secrets, Bearer Tokens, or Remote Credentials
+- INV-LOCAL-04: Atomic Persistence & Corruption-Resistant State Updates
+- INV-LOCAL-05: Least-Privilege Execution (Unprivileged RunAsInvoker)
+- INV-LOCAL-06: Explicit User-Consent Handoff (VS Code, PyCharm, PyInstaller)
+- INV-LOCAL-07: Full UTF-8 Encoding & German Umlaut Preservation
+- INV-LOCAL-08: Complete Screen-Reader Accessibility (a11y) & WCAG AA Metadata
+- INV-SLA-09: 5-Day Vulnerability Triage & Reproducibility Assessment
+- INV-SLA-10: 48-Hour Security Response SLA via GitHub Private Advisories
+===============================================================================
