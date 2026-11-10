@@ -3029,18 +3029,20 @@ class LibraryManager:
                     continue
 
                 snippet_name = snippet_name.strip()
+                # Erst prüfen, dann schreiben: ein ungültiger "locked"-Wert darf
+                # kein bereits vorhandenes Snippet überschreiben oder löschen.
+                try:
+                    is_locked = _coerce_portable_bool(locked)
+                except ValueError:
+                    skipped += 1
+                    continue
+
                 success, _message = self.save_snippet(topic_name, snippet_name, content)
                 if not success:
                     skipped += 1
                     continue
 
                 key = f"{topic_name}/{snippet_name}"
-                try:
-                    is_locked = _coerce_portable_bool(locked)
-                except ValueError:
-                    skipped += 1
-                    self.delete_item(topic_name, snippet_name)
-                    continue
 
                 if is_locked:
                     self.locked_items.add(key)
