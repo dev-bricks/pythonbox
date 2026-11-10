@@ -20,6 +20,7 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
 ### Behoben / Fixed
 - Sichere Literalersetzung in `SearchReplaceBar.replace_all`: Case-insensitive Textersetzung verwendet jetzt einen Callable-Ersatz (`lambda _m: replace_text`) in `re.sub()`. Dies verhindert Abstürze mit `re.error: bad escape \u` bei Pfadangaben mit Backslashes (z. B. Windows-Pfade wie `C:\Users\...`) sowie Fehlinterpretationen von Regex-Gruppenreferenzen und stellt identisches Literal-Verhalten wie bei case-sensitiver Ersetzung sicher.
+- Snippet-Import prüft `locked` vor dem Schreiben: `LibraryManager.import_payload` hat bei einem ungültigen `locked`-Wert das Snippet zuerst gespeichert und danach wieder gelöscht. Ein bereits vorhandenes Snippet gleichen Namens ging dabei verloren. Solche Einträge werden jetzt übersprungen, ohne die Bibliothek anzufassen.
 
 ## [1.0.1] - 2026-09-18
 
