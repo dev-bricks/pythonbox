@@ -107,6 +107,19 @@ PORTABLE_SETTINGS_FIELDS = (
 )
 
 
+def detect_newline(text: str) -> Optional[str]:
+    """Ermittelt das vorherrschende Zeilenende eines Textes.
+
+    Gibt ``"\r\n"`` oder ``"\n"`` zurück, bzw. ``None``, wenn der Text keinen
+    Zeilenumbruch enthält (dann gilt beim Speichern der Plattformstandard).
+    """
+    crlf = text.count('\r\n')
+    lf = text.count('\n') - crlf
+    if crlf == 0 and lf == 0:
+        return None
+    return '\r\n' if crlf >= lf else '\n'
+
+
 def _utc_export_timestamp() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
@@ -2608,6 +2621,8 @@ class EditorTab:
         self.highlighter = highlighter
         self.file_path = file_path
         self.is_modified = False
+        # Zeilenende der geöffneten Datei ("\n" oder "\r\n"); None = Plattformstandard.
+        self.newline: Optional[str] = None
 
 
 class MultiTabEditor(QWidget):
@@ -2754,7 +2769,14 @@ class MultiTabEditor(QWidget):
             tab.file_path = file_path
         
         try:
-            Path(tab.file_path).write_text(tab.editor.toPlainText(), encoding='utf-8')
+            text = tab.editor.toPlainText()
+            if tab.newline:
+                # Zeilenenden der Originaldatei beibehalten (kein stilles LF -> CRLF).
+                Path(tab.file_path).write_text(
+                    text.replace('\n', tab.newline), encoding='utf-8', newline=''
+                )
+            else:
+                Path(tab.file_path).write_text(text, encoding='utf-8')
             tab.editor.document().setModified(False)
             self.tab_widget.setTabText(index, Path(tab.file_path).name)
             return True
@@ -2771,7 +2793,10 @@ class MultiTabEditor(QWidget):
                 return idx
         
         try:
-            content = Path(file_path).read_text(encoding='utf-8')
+            with open(file_path, 'r', encoding='utf-8', newline='') as handle:
+                raw = handle.read()
+            newline = detect_newline(raw)
+            content = raw.replace('\r\n', '\n').replace('\r', '\n')
             if replace_current_untitled and self.tab_widget.count() == 1:
                 current_index = self.tab_widget.currentIndex()
                 current_tab = self.tabs.get(current_index)
@@ -2784,11 +2809,15 @@ class MultiTabEditor(QWidget):
                     current_tab.editor.setPlainText(content)
                     current_tab.editor.document().setModified(False)
                     current_tab.file_path = file_path
+                    current_tab.newline = newline
                     self.tab_widget.setTabText(current_index, Path(file_path).name)
                     self.tab_widget.setCurrentIndex(current_index)
                     return current_index
 
-            return self.new_tab(file_path, content)
+            index = self.new_tab(file_path, content)
+            if index in self.tabs:
+                self.tabs[index].newline = newline
+            return index
         except Exception as e:
             QMessageBox.critical(self, "Fehler", f"Öffnen fehlgeschlagen: {e}")
             return -1
@@ -2913,6 +2942,31 @@ class LibraryManager:
             json.dump(list(self.locked_items), f)
         os.replace(tmp, self.lock_file)
 
+    @staticmethod
+    def _is_safe_component(value) -> bool:
+        """Prüft, ob ``value`` ein einzelner, harmloser Pfadbestandteil ist.
+
+        Themen- und Snippet-Namen stammen aus Dialogen und aus importierten
+        JSON-Dateien. Ohne diese Prüfung könnte ein Name wie ``../../x`` oder
+        ein absoluter Pfad Dateien außerhalb der Bibliothek überschreiben.
+        """
+        if not isinstance(value, str) or not value or value != value.strip():
+            return False
+        if value in (".", "..") or value.endswith("."):
+            return False
+        return not any(ch in value for ch in '/\\:\0')
+
+    def _snippet_path(self, topic, name) -> Optional[Path]:
+        """Liefert den Snippet-Pfad oder ``None``, wenn er die Bibliothek verließe."""
+        if not (self._is_safe_component(topic) and self._is_safe_component(name)):
+            return None
+        path = self.root / topic / f"{name}.py"
+        try:
+            path.resolve().relative_to(self.root.resolve())
+        except (OSError, ValueError):
+            return None
+        return path
+
     def is_locked(self, topic, name):
         return f"{topic}/{name}" in self.locked_items
 
@@ -2934,17 +2988,19 @@ class LibraryManager:
         return sorted([f.stem for f in path.glob("*.py")])
 
     def get_content(self, topic, name):
-        path = self.root / topic / f"{name}.py"
-        if path.exists(): return path.read_text(encoding='utf-8')
+        path = self._snippet_path(topic, name)
+        if path is not None and path.exists(): return path.read_text(encoding='utf-8')
         return ""
 
     def save_snippet(self, topic, name, content):
         if self.is_locked(topic, name):
             return False, "Eintrag ist gesperrt."
+        path = self._snippet_path(topic, name)
+        if path is None:
+            return False, "Ungültiger Themen- oder Snippet-Name."
         try:
-            topic_dir = self.root / topic
-            topic_dir.mkdir(exist_ok=True)
-            (topic_dir / f"{name}.py").write_text(content, encoding='utf-8')
+            path.parent.mkdir(exist_ok=True)
+            path.write_text(content, encoding='utf-8')
             return True, "Gespeichert."
         except Exception as e:
             return False, str(e)
@@ -2952,8 +3008,8 @@ class LibraryManager:
     def delete_item(self, topic, name):
         if self.is_locked(topic, name):
             return False
-        path = self.root / topic / f"{name}.py"
-        if path.exists():
+        path = self._snippet_path(topic, name)
+        if path is not None and path.exists():
             os.remove(path)
             key = f"{topic}/{name}"
             if key in self.locked_items:
@@ -3439,12 +3495,11 @@ class PythonArchitect(QMainWindow):
         """Wird aufgerufen wenn der aktive Editor wechselt"""
         if editor:
             self.search_bar.set_editor(editor)
-            # Disconnect first to avoid duplicate connections when switching back
-            try:
-                editor.cursorPositionInfo.disconnect(self.update_cursor_position)
-            except RuntimeError:
-                pass
-            editor.cursorPositionInfo.connect(self.update_cursor_position)
+            # UniqueConnection verhindert Doppelverbindungen beim Zurückwechseln,
+            # ohne die libpyside-Warnung eines fehlgeschlagenen disconnect().
+            editor.cursorPositionInfo.connect(
+                self.update_cursor_position, Qt.ConnectionType.UniqueConnection
+            )
             
             # NEU v7: Git-Status aktualisieren (nur wenn git_label existiert)
             if hasattr(self, 'git_label'):

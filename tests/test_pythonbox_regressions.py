@@ -458,6 +458,100 @@ class LibraryExportRegressionTests(unittest.TestCase):
             self.assertEqual("print('eins')\n", imported_manager.get_content("Tests", "Alpha"))
             self.assertTrue(imported_manager.is_locked("Tests", "Alpha"))
 
+    def test_snippet_import_rejects_names_that_escape_the_library(self):
+        """Importierte Themen-/Snippet-Namen dürfen die Bibliothek nicht verlassen."""
+        module = load_pythonbox_module()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir) / "library"
+            outside = Path(temp_dir) / "outside"
+            outside.mkdir()
+            victim = outside / "victim.py"
+            victim.write_text("original\n", encoding="utf-8")
+            manager = module.LibraryManager(root=root)
+
+            payload = {
+                "schema": module.SNIPPET_EXPORT_SCHEMA,
+                "topics": [
+                    {"name": "../outside", "snippets": [{"name": "victim", "content": "x"}]},
+                    {"name": str(outside), "snippets": [{"name": "victim", "content": "x"}]},
+                    {"name": "Tests", "snippets": [
+                        {"name": "../../outside/victim", "content": "x"},
+                        {"name": "..", "content": "x"},
+                        {"name": "sub\\victim", "content": "x"},
+                        {"name": "Gut", "content": "print('ok')\n"},
+                    ]},
+                ],
+            }
+            result = manager.import_payload(payload)
+
+            self.assertEqual(1, result["imported"])
+            self.assertEqual(5, result["skipped"])
+            self.assertEqual("original\n", victim.read_text(encoding="utf-8"))
+            self.assertEqual("print('ok')\n", manager.get_content("Tests", "Gut"))
+            self.assertEqual(["victim.py"], sorted(f.name for f in outside.iterdir()))
+
+    def test_snippet_file_operations_refuse_unsafe_names(self):
+        module = load_pythonbox_module()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir) / "library"
+            victim = Path(temp_dir) / "victim.py"
+            victim.write_text("original\n", encoding="utf-8")
+            manager = module.LibraryManager(root=root)
+
+            success, message = manager.save_snippet("..", "victim", "x")
+            self.assertFalse(success)
+            self.assertIn("Ungültig", message)
+            self.assertEqual("", manager.get_content("..", "victim"))
+            self.assertFalse(manager.delete_item("..", "victim"))
+            self.assertEqual("original\n", victim.read_text(encoding="utf-8"))
+
+
+class LineEndingRegressionTests(unittest.TestCase):
+    """Speichern darf die Zeilenenden einer geöffneten Datei nicht umschreiben."""
+
+    def test_detect_newline_reports_dominant_style(self):
+        module = load_pythonbox_module()
+
+        self.assertIsNone(module.detect_newline("ohne umbruch"))
+        self.assertEqual("\n", module.detect_newline("a\nb\n"))
+        self.assertEqual("\r\n", module.detect_newline("a\r\nb\r\n"))
+        self.assertEqual("\n", module.detect_newline("a\nb\nc\r\n"))
+
+    def _roundtrip(self, original: bytes) -> bytes:
+        module = load_pythonbox_module()
+        app = module.QApplication.instance() or module.QApplication([])
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            file_path = Path(temp_dir) / "sample.py"
+            file_path.write_bytes(original)
+
+            editor = module.MultiTabEditor()
+            try:
+                index = editor.open_file(str(file_path))
+                self.assertGreaterEqual(index, 0)
+                tab = editor.tabs[index]
+                self.assertNotIn("\r", tab.editor.toPlainText())
+                tab.editor.appendPlainText("x = 1")
+                self.assertTrue(editor.save_tab(index))
+                return file_path.read_bytes()
+            finally:
+                editor.deleteLater()
+                app.processEvents()
+
+    def test_save_preserves_lf_line_endings(self):
+        saved = self._roundtrip(b"a = 1\nb = 2\n")
+        self.assertNotIn(b"\r", saved)
+        self.assertTrue(saved.startswith(b"a = 1\nb = 2\n"))
+        self.assertIn(b"x = 1", saved)
+
+    def test_save_preserves_crlf_line_endings(self):
+        saved = self._roundtrip(b"a = 1\r\nb = 2\r\n")
+        self.assertTrue(saved.startswith(b"a = 1\r\nb = 2\r\n"))
+        self.assertIn(b"x = 1", saved)
+        self.assertEqual(saved.count(b"\n"), saved.count(b"\r\n"))
+
 
 class MinimapToggleRegressionTests(unittest.TestCase):
     """Regression tests for toggle_minimap cleanup."""

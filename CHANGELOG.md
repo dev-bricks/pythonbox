@@ -19,6 +19,9 @@ Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
   - Neue automatisierte Vertragstests in `tests/test_metadata.py` zur Verifikation von NOTICE, bilingualer 18-Punkte-Parität, dualen Mermaid-Diagrammen, 20/20 Keywords und Version Freeze (`1.0.1`).
 
 ### Behoben / Fixed
+- Sicherheit: Snippet-Bibliothek akzeptiert nur noch einzelne, harmlose Pfadbestandteile als Themen- und Snippet-Namen (`LibraryManager._snippet_path`). Zuvor konnte eine importierte `pythonbox-snippets-v1`-Datei über Namen wie `../../ordner` oder absolute Pfade beliebige `.py`-Dateien außerhalb der Bibliothek überschreiben; solche Einträge werden jetzt übersprungen und als `skipped` gezählt.
+- Zeilenenden bleiben beim Speichern erhalten: `MultiTabEditor.open_file` merkt sich das Zeilenende der Datei (`detect_newline`), `save_tab` schreibt es unverändert zurück. Zuvor wurden LF-Dateien unter Windows beim Speichern still nach CRLF umgeschrieben, wodurch Git jede Zeile als geändert meldete. Neue, noch nie gespeicherte Dateien verwenden weiterhin den Plattformstandard.
+- Keine `libpyside: Failed to disconnect`-Warnung mehr bei jedem Tab-Wechsel: `on_editor_changed` verbindet `cursorPositionInfo` jetzt mit `Qt.ConnectionType.UniqueConnection` statt vorab zu trennen.
 - Sichere Literalersetzung in `SearchReplaceBar.replace_all`: Case-insensitive Textersetzung verwendet jetzt einen Callable-Ersatz (`lambda _m: replace_text`) in `re.sub()`. Dies verhindert Abstürze mit `re.error: bad escape \u` bei Pfadangaben mit Backslashes (z. B. Windows-Pfade wie `C:\Users\...`) sowie Fehlinterpretationen von Regex-Gruppenreferenzen und stellt identisches Literal-Verhalten wie bei case-sensitiver Ersetzung sicher.
 
 ## [1.0.1] - 2026-09-18
