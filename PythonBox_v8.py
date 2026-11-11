@@ -3005,6 +3005,27 @@ class LibraryManager:
         except Exception as e:
             return False, str(e)
 
+    def rename_snippet(self, old_topic, old_name, topic, name, content):
+        """Speichert unter dem neuen Namen und entfernt erst danach den alten Eintrag.
+
+        Scheitert das Speichern (ungültiger Name, gesperrtes Ziel, Schreibfehler),
+        bleibt der alte Eintrag unverändert erhalten.
+        """
+        old_path = self._snippet_path(old_topic, old_name)
+        ok, msg = self.save_snippet(topic, name, content)
+        if not ok:
+            return False, msg
+        new_path = self._snippet_path(topic, name)
+        same_file = False
+        if old_path is not None and new_path is not None and old_path.exists():
+            try:
+                same_file = os.path.samefile(old_path, new_path)
+            except OSError:
+                same_file = False
+        if not same_file:
+            self.delete_item(old_topic, old_name)
+        return True, msg
+
     def delete_item(self, topic, name):
         if self.is_locked(topic, name):
             return False
@@ -4197,9 +4218,11 @@ class PythonArchitect(QMainWindow):
                 if data['locked']:
                     QMessageBox.warning(self, "Gesperrt", "Namen ändern bei gesperrten Items nicht erlaubt.")
                     return
-                self.lib_manager.delete_item(data['topic'], data['name'])
-            
-            self.lib_manager.save_snippet(t, n, c)
+                ok, msg = self.lib_manager.rename_snippet(data['topic'], data['name'], t, n, c)
+            else:
+                ok, msg = self.lib_manager.save_snippet(t, n, c)
+            if not ok:
+                QMessageBox.warning(self, "Fehler", msg)
             self.load_library_tree()
 
     def delete_library_item(self, item):

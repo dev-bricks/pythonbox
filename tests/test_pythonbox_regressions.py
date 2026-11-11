@@ -1261,5 +1261,61 @@ class TreeDropRegressionTests(unittest.TestCase):
                       "tree_drop must use try/except when reading dropped .py file content")
 
 
+class LibraryRenameRegressionTests(unittest.TestCase):
+    """Umbenennen darf ein Snippet nie verlieren, wenn der neue Name abgelehnt wird."""
+
+    def _manager(self, root):
+        module = load_pythonbox_module()
+        return module.LibraryManager(root=Path(root))
+
+    def test_rename_to_rejected_name_keeps_old_snippet(self):
+        with tempfile.TemporaryDirectory() as root:
+            manager = self._manager(root)
+            self.assertTrue(manager.save_snippet("Thema", "Alpha", "x = 1\n")[0])
+            for bad in ("Regex: Gruppen", "Kap. 1.", "../flucht", ""):
+                with self.subTest(name=bad):
+                    ok, msg = manager.rename_snippet("Thema", "Alpha", "Thema", bad, "x = 2\n")
+                    self.assertFalse(ok)
+                    self.assertTrue(msg)
+                    self.assertEqual("x = 1\n", manager.get_content("Thema", "Alpha"))
+
+    def test_rename_to_valid_name_moves_snippet(self):
+        with tempfile.TemporaryDirectory() as root:
+            manager = self._manager(root)
+            manager.save_snippet("Thema", "Alpha", "x = 1\n")
+            ok, _msg = manager.rename_snippet("Thema", "Alpha", "Anderes", "Beta", "x = 2\n")
+            self.assertTrue(ok)
+            self.assertEqual("x = 2\n", manager.get_content("Anderes", "Beta"))
+            self.assertFalse((Path(root) / "Thema" / "Alpha.py").exists())
+
+    def test_rename_to_locked_target_keeps_both(self):
+        with tempfile.TemporaryDirectory() as root:
+            manager = self._manager(root)
+            manager.save_snippet("Thema", "Alpha", "a\n")
+            manager.save_snippet("Thema", "Beta", "b\n")
+            manager.toggle_lock("Thema", "Beta")
+            ok, _msg = manager.rename_snippet("Thema", "Alpha", "Thema", "Beta", "neu\n")
+            self.assertFalse(ok)
+            self.assertEqual("a\n", manager.get_content("Thema", "Alpha"))
+            self.assertEqual("b\n", manager.get_content("Thema", "Beta"))
+
+    def test_rename_onto_same_file_does_not_delete_it(self):
+        with tempfile.TemporaryDirectory() as root:
+            manager = self._manager(root)
+            manager.save_snippet("Thema", "Alpha", "a\n")
+            with mock.patch.object(os.path, "samefile", return_value=True):
+                ok, _msg = manager.rename_snippet("Thema", "Alpha", "Thema", "Alpha", "neu\n")
+            self.assertTrue(ok)
+            self.assertEqual("neu\n", manager.get_content("Thema", "Alpha"))
+
+    def test_edit_dialog_uses_rename_snippet_and_reports_failure(self):
+        source = SOURCE.read_text(encoding="utf-8")
+        start = source.index("def edit_library_item")
+        body = source[start:source.index("def delete_library_item", start)]
+        self.assertIn("rename_snippet(", body)
+        self.assertNotIn("delete_item(", body)
+        self.assertIn("QMessageBox.warning(self, \"Fehler\", msg)", body)
+
+
 if __name__ == "__main__":
     unittest.main()
