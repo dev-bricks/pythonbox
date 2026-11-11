@@ -10,7 +10,7 @@
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
 [![PySide6](https://img.shields.io/badge/PySide6-6.5+-green.svg)](https://pypi.org/project/PySide6/)
 [![PythonBox tests](https://github.com/dev-bricks/pythonbox/actions/workflows/tests.yml/badge.svg)](https://github.com/dev-bricks/pythonbox/actions/workflows/tests.yml)
-[![Tests](https://img.shields.io/badge/Tests-126%20passed%20%7C%20100%25%20green-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-131%20passed%20%7C%20100%25%20green-brightgreen.svg)](tests/)
 [![Security](https://img.shields.io/badge/Security-RunAsInvoker-success.svg)](SECURITY.md)
 [![Zero-Egress](https://img.shields.io/badge/Zero--Egress-100%25%20Offline-success.svg)](SECURITY.md)
 [![SLA](https://img.shields.io/badge/SLA-48h%20Response-blue.svg)](SECURITY.md)

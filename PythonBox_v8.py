@@ -2954,7 +2954,7 @@ class LibraryManager:
             return False
         if value in (".", "..") or value.endswith("."):
             return False
-        return not any(ch in value for ch in '/\\:\0')
+        return not any(ch in '/\\:' or ch < ' ' for ch in value)
 
     def _snippet_path(self, topic, name) -> Optional[Path]:
         """Liefert den Snippet-Pfad oder ``None``, wenn er die Bibliothek verließe."""

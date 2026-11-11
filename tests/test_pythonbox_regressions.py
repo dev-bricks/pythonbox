@@ -500,6 +500,9 @@ class LibraryExportRegressionTests(unittest.TestCase):
             victim.write_text("original\n", encoding="utf-8")
             manager = module.LibraryManager(root=root)
 
+            for bad_name in ("zeile\numbruch", "tab\tname", "nul\0"):
+                self.assertFalse(manager.save_snippet("Tests", bad_name, "x")[0])
+
             success, message = manager.save_snippet("..", "victim", "x")
             self.assertFalse(success)
             self.assertIn("Ungültig", message)
