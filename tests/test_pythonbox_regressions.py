@@ -430,6 +430,31 @@ class SettingsRegressionTests(unittest.TestCase):
                 app.processEvents()
 
 
+class LibraryImportValidationRegressionTests(unittest.TestCase):
+    def test_import_with_invalid_locked_value_keeps_existing_snippet(self):
+        module = load_pythonbox_module()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            manager = module.LibraryManager(root=Path(temp_dir) / "library")
+            manager.save_snippet("Tests", "Alpha", "print('original')\n")
+
+            result = manager.import_payload({
+                "schema": module.SNIPPET_EXPORT_SCHEMA,
+                "topics": [{
+                    "name": "Tests",
+                    "snippets": [
+                        {"name": "Alpha", "content": "print('neu')\n", "locked": "vielleicht"},
+                        {"name": "Beta", "content": "print('beta')\n", "locked": "vielleicht"},
+                    ],
+                }],
+            })
+
+            self.assertEqual(0, result["imported"])
+            self.assertEqual(2, result["skipped"])
+            self.assertEqual("print('original')\n", manager.get_content("Tests", "Alpha"))
+            self.assertEqual("", manager.get_content("Tests", "Beta"))
+
+
 class LibraryExportRegressionTests(unittest.TestCase):
     def test_snippet_library_json_roundtrip_preserves_content_and_locks(self):
         module = load_pythonbox_module()
